@@ -6,10 +6,10 @@ Company list CSV file is exported from a TD Ameritrade stock screen.
 
 ## Setup
 
-Clone the repository. Alternatively, [fork this repository](https://github.com/tswast/stockdice/fork) and clone your own copy.
+Clone the repository. Alternatively, [fork this repository](https://github.com/bananajuicellc/stockdice.app/fork) and clone your own copy.
 
 ```
-git clone https://github.com/tswast/stockdice.git
+git clone https://github.com/bananajuicellc/stockdice.app.git stockdice
 cd stockdice
 ```
 
