@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import asyncio
+import datetime
 import logging
 
 import aiohttp
@@ -68,44 +70,49 @@ async def download_forex_list(session):
 
 @retry_fmp
 async def download_forex_quote(session, symbol: str, last_updated_us: int):
-    url = FMP_FOREX_QUOTE.format(symbol, apikey=FMP_API_KEY)
+    url = FMP_FOREX_QUOTE.format(symbol=symbol, apikey=FMP_API_KEY)
     async with session.get(url) as resp:
         resp_json = await check_status(resp)
-        market_cap = None
         if resp_json:
-            market_cap = resp_json[0].get("marketCap")
-        if market_cap is None:
-            logging.warning(f"no market cap for {symbol}")
-            market_cap = 0
+            price = resp_json[0].get("price")
+
+        if price is None:
+            logging.warning(f"no price for {symbol}")
+        else:
+            price = float(price)
 
         DB.execute(
             """INSERT INTO forex
-            (symbol, market_cap_usd, last_updated_us)
-            VALUES (:symbol, :market_cap_usd, :last_updated_us)
+            (symbol, price, last_updated_us)
+            VALUES (:symbol, :price, :last_updated_us)
             ON CONFLICT(symbol) DO UPDATE
-            SET market_cap_usd=excluded.market_cap_usd,
+            SET price=excluded.price,
               last_updated_us=excluded.last_updated_us
             """,
             {
                 "symbol": symbol,
-                "market_cap_usd": float(market_cap),
+                "price": price,
                 "last_updated_us": last_updated_us,
             },
         )
         DB.commit()
 
 
-async def download_pairs(session, out):
-    for currency in CURRENCIES:
-        await download_pair(session, out, currency)
-
-
-async def main():
+async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     async with aiohttp.ClientSession() as session:
-        for symbol in await download_forex_list(session):
-            print(symbol)
+        all_symbols = await download_forex_list(session)
+        return await download_all(
+            download_forex_quote,
+            "forex",
+            max_age=max_age,
+            all_symbols=all_symbols,
+        )
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max-age", default="1d")
+    args = parser.parse_args()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    max_age = parse_timedelta(args.max_age)
+    loop.run_until_complete(main(max_age=max_age))

@@ -162,7 +162,7 @@ async def download_market_cap(session, symbol: str, last_updated_us: int):
 
 async def main(download_fn, table: str, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     all_symbols = load_symbols()
-    return download_all(download_fn, table, max_age=max_age, all_symbols=all_symbols)
+    return await download_all(download_fn, table, max_age=max_age, all_symbols=all_symbols)
 
 
 if __name__ == "__main__":

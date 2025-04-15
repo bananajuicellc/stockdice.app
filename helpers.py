@@ -110,24 +110,16 @@ def parse_timedelta(value: str) -> datetime.timedelta:
 def load_forex():
     global forex_to_usd
     forex_to_usd = {"USD": 1.0}
-    csv_path = FMP_DIR / "forex.csv"
 
-    with open(csv_path) as forex_csv:
-        for line in forex_csv:
-            line = line.strip()
-            ticker, bid, ask = line.split(",")
-            if bid == "None" or ask == "None":
-                # Skip invalid currencies.
-                continue
-            # Use average of bid/ask for simplicity.
-            price = (float(bid) + float(ask)) / 2.0
-            from_curr, to_curr = ticker.split("/")
-
-            if to_curr == "USD":
-                forex_to_usd[from_curr] = price
-            elif from_curr == "USD":
-                forex_to_usd[to_curr] = 1.0 / price
-
+    rows = DB.execute(
+        """
+        SELECT from_currency, price
+        FROM forex
+        WHERE to_currency = 'USD'
+        """
+    )
+    for row in rows:
+        forex_to_usd[row['from_currency']] = row['price']
 
 
 def to_usd(curr, value):
@@ -180,7 +172,11 @@ async def download_all(
                     await asyncio.sleep(remaining)
                 batch_start = time.monotonic()
                 batch_index = 0
-            await download_fn(session, symbol, last_updated_us)
+            await download_fn(
+                session,
+                symbol,
+                last_updated_us,
+            )
 
 
 __all__ = [
