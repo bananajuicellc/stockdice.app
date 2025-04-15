@@ -32,9 +32,6 @@ FMP_QUOTE = "https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={api
 FMP_INCOME_STATEMENT = "https://financialmodelingprep.com/api/v3/income-statement/{symbol}?limit=1&apikey={apikey}"
 FMP_BALANCE_SHEET = "https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=quarter&limit=1&apikey={apikey}"
 
-BATCH_SIZE = 10
-BATCH_WAIT = 1
-
 
 def load_symbols():
     all_symbols = []
@@ -45,18 +42,6 @@ def load_symbols():
 
     all_symbols.sort()
     return all_symbols
-
-
-def is_fresh(table: str, symbol: str, max_last_updated_us: int) -> bool:
-    cursor = DB.execute(
-        f"SELECT last_updated_us FROM {table} WHERE symbol = :symbol", {"symbol": symbol}
-    )
-    previous_last_updated = cursor.fetchone()
-    return (
-        previous_last_updated is not None
-        and previous_last_updated[0] is not None
-        and previous_last_updated[0] > max_last_updated_us
-    )
 
 
 @retry_fmp
@@ -128,7 +113,7 @@ async def download_balance_sheet(session, symbol: str, last_updated_us: int):
             book_value = 0
 
         DB.execute(
-            """INSERT INTO balance_sheets 
+            """INSERT INTO balance_sheets
             (symbol, book, currency, last_updated_us)
             VALUES (:symbol, :book, :currency, :last_updated_us)
             ON CONFLICT(symbol) DO UPDATE
@@ -159,7 +144,7 @@ async def download_market_cap(session, symbol: str, last_updated_us: int):
             market_cap = 0
 
         DB.execute(
-            """INSERT INTO quotes 
+            """INSERT INTO quotes
             (symbol, market_cap_usd, last_updated_us)
             VALUES (:symbol, :market_cap_usd, :last_updated_us)
             ON CONFLICT(symbol) DO UPDATE
@@ -177,29 +162,7 @@ async def download_market_cap(session, symbol: str, last_updated_us: int):
 
 async def main(download_fn, table: str, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     all_symbols = load_symbols()
-
-    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
-    now = datetime.datetime.now(datetime.timezone.utc)
-    last_updated_us = (now - epoch) / datetime.timedelta(microseconds=1)
-    # The oldest we'll allow a value to be before we have to refresh it.
-    max_last_updated_us = ((now - max_age) - epoch) / datetime.timedelta(microseconds=1)
-
-    async with aiohttp.ClientSession() as session:
-        batch_index = 0
-        batch_start = time.monotonic()
-        for symbol in all_symbols:
-            if is_fresh(table, symbol, max_last_updated_us):
-                continue
-
-            # Rate limit!
-            if batch_index >= BATCH_SIZE:
-                batch_time = time.monotonic() - batch_start()
-                remaining = BATCH_WAIT - batch_time
-                if remaining > 0:
-                    await asyncio.sleep(remaining)
-                batch_start = time.monotonic()
-                batch_index = 0
-            await download_fn(session, symbol, last_updated_us)
+    return download_all(download_fn, table, max_age=max_age, all_symbols=all_symbols)
 
 
 if __name__ == "__main__":
@@ -219,7 +182,7 @@ if __name__ == "__main__":
         download_fn = download_income
     else:
         sys.exit("expected {quote,balance-sheet,income}")
-    
+
     max_age = parse_timedelta(args.max_age)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)

@@ -13,13 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import asyncio
 import datetime
 import pathlib
 import functools
 import re
 import sqlite3
+import time
+from typing import Iterable
 
+import aiohttp
 import toml
 
 
@@ -33,6 +38,8 @@ with open(DIR / "environment.toml") as config_file:
 
 FMP_API_KEY = config["FMP_API_KEY"]
 
+BATCH_SIZE = 10
+BATCH_WAIT = 1
 RATE_LIMIT_STATUS = 429
 RATE_LIMIT_SECONDS = "X-Rate-Limit-Retry-After-Seconds"
 RATE_LIMIT_MILLISECONDS = "X-Rate-Limit-Retry-After-Milliseconds"
@@ -133,6 +140,49 @@ def to_usd(curr, value):
     return forex_to_usd[curr] * value
 
 
+def is_fresh(table: str, symbol: str, max_last_updated_us: int) -> bool:
+    cursor = DB.execute(
+        f"SELECT last_updated_us FROM {table} WHERE symbol = :symbol", {"symbol": symbol}
+    )
+    previous_last_updated = cursor.fetchone()
+    return (
+        previous_last_updated is not None
+        and previous_last_updated[0] is not None
+        and previous_last_updated[0] > max_last_updated_us
+    )
+
+
+async def download_all(
+    download_fn,
+    table: str,
+    *,
+    max_age: datetime.timedelta = datetime.timedelta(days=1),
+    all_symbols: Iterable[str],
+):
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    last_updated_us = (now - epoch) / datetime.timedelta(microseconds=1)
+    # The oldest we'll allow a value to be before we have to refresh it.
+    max_last_updated_us = ((now - max_age) - epoch) / datetime.timedelta(microseconds=1)
+
+    async with aiohttp.ClientSession() as session:
+        batch_index = 0
+        batch_start = time.monotonic()
+        for symbol in all_symbols:
+            if is_fresh(table, symbol, max_last_updated_us):
+                continue
+
+            # Rate limit!
+            if batch_index >= BATCH_SIZE:
+                batch_time = time.monotonic() - batch_start
+                remaining = BATCH_WAIT - batch_time
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
+                batch_start = time.monotonic()
+                batch_index = 0
+            await download_fn(session, symbol, last_updated_us)
+
+
 __all__ = [
     "DB",
     "DIR",
@@ -144,4 +194,6 @@ __all__ = [
     "parse_timedelta",
     "retry_fmp",
     "to_usd",
+    "is_fresh",
+    "download_all",
 ]
