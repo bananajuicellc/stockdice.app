@@ -119,7 +119,8 @@ def load_forex():
         """
     )
     for row in rows:
-        forex_to_usd[row['from_currency']] = row['price']
+        from_currency, price = row
+        forex_to_usd[from_currency] = price
 
 
 def to_usd(curr, value):
