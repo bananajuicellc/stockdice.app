@@ -86,6 +86,21 @@ def load_income(income_path):
     income.to_sql("incomes", DB, if_exists="append")
 
 
+def create_forex():
+    DB.execute("DROP TABLE IF EXISTS forex;")
+    DB.execute("""
+    CREATE TABLE forex(
+    symbol STRING PRIMARY KEY,
+    from_currency STRING,
+    to_currency STRING,
+    from_name STRING,
+    to_name STRING,
+    price REAL,
+    last_updated_us INTEGER
+    );
+    """)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command")
@@ -112,12 +127,15 @@ if __name__ == "__main__":
             load_income(csv_path)
         except FileNotFoundError:
             print("no CSV to migrate, finished")
+    elif command == "forex":
+        create_forex()
     elif command == "all":
+        create_forex()
         create_quote()
         create_balance_sheet()
         create_income()
         print("database initialized")
     else:
-        sys.exit("expected {quote,balance-sheet,income}")
-    
+        sys.exit("expected {quote,balance-sheet,income,forex,all}")
+
 

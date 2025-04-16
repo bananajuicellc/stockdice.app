@@ -13,72 +13,106 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import asyncio
+import datetime
+import logging
 
 import aiohttp
 
 from helpers import *
 
 
-FMP_FOREX = "https://financialmodelingprep.com/api/v3/fx?apikey={apikey}"
-FMP_FOREX_PAIR = "https://financialmodelingprep.com/api/v4/forex/last/{currency}USD?apikey={apikey}"
-
-CURRENCIES = {
-    "ARS",  # Argentine Peso
-    "BRL",  # Brazilian Real
-    "CLP",  # Chilean Peso
-    "COP",  # Colombian Peso
-    "IDR",  # Indonesian Rupiah
-    "ILS",  # Israeli New Shekel
-    "KRW",  # South Korean won
-    "KYD",  # Cayman Islands dollar
-    "MYR",  # Malaysian Ringgit
-    "PEN",  # Peruvian sol
-    "PHP",  # Philippine Peso
-    "RUB",  # Russian Ruble
-    "TWD",  # New Taiwan dollar
-    # CNH is related and tracks CNY closely, but has more volatility.
-    # https://www.nasdaq.com/articles/cnh-vs-cny-differences-between-two-yuan-2018-09-12
-    "CNY",  # Chinese Yuan
-}
+FMP_FOREX_LIST = "https://financialmodelingprep.com/stable/forex-list?apikey={apikey}"
+FMP_FOREX_QUOTE = "https://financialmodelingprep.com/stable/quote?symbol={symbol}&apikey={apikey}"
 
 
 @retry_fmp
-async def download_forex(session, out):
-    url = FMP_FOREX.format(apikey=FMP_API_KEY)
+async def download_forex_list(session):
+    url = FMP_FOREX_LIST.format(apikey=FMP_API_KEY)
+    symbols = []
+
     async with session.get(url) as resp:
         resp_json = await check_status(resp)
         for forex in resp_json:
-            ticker = forex.get("ticker")
-            bid = forex.get("bid")
-            ask = forex.get("ask")
-            out.write(f"{ticker},{bid},{ask}\n")
+            symbol = forex.get("symbol")
+            from_currency = forex.get("fromCurrency")
+            to_currency = forex.get("toCurrency")
+            from_name = forex.get("fromName")
+            to_name = forex.get("toName")
+
+            if to_currency is None or to_currency.upper() != "USD":
+                continue
+
+            DB.execute(
+                """INSERT INTO forex
+                (symbol, from_currency, to_currency, from_name, to_name)
+                VALUES (:symbol, :from_currency, :to_currency, :from_name, :to_name)
+                ON CONFLICT(symbol) DO UPDATE
+                SET from_currency=excluded.from_currency,
+                to_currency=excluded.to_currency,
+                from_name=excluded.from_name,
+                to_name=excluded.to_name;
+                """,
+                {
+                    "symbol": symbol,
+                    "from_currency": from_currency,
+                    "to_currency": to_currency,
+                    "from_name": from_name,
+                    "to_name": to_name,
+                },
+            )
+            DB.commit()
+            symbols.append(symbol)
+
+    return symbols
 
 
 @retry_fmp
-async def download_pair(session, out, currency):
-    url = FMP_FOREX_PAIR.format(currency=currency, apikey=FMP_API_KEY)
+async def download_forex_quote(session, symbol: str, last_updated_us: int):
+    url = FMP_FOREX_QUOTE.format(symbol=symbol, apikey=FMP_API_KEY)
     async with session.get(url) as resp:
-        forex = await check_status(resp)
-        ticker = forex.get("symbol").replace("USD", "/USD")
-        bid = forex.get("bid")
-        ask = forex.get("ask")
-        out.write(f"{ticker},{bid},{ask}\n")
+        resp_json = await check_status(resp)
+        if resp_json:
+            price = resp_json[0].get("price")
+
+        if price is None:
+            logging.warning(f"no price for {symbol}")
+        else:
+            price = float(price)
+
+        DB.execute(
+            """INSERT INTO forex
+            (symbol, price, last_updated_us)
+            VALUES (:symbol, :price, :last_updated_us)
+            ON CONFLICT(symbol) DO UPDATE
+            SET price=excluded.price,
+              last_updated_us=excluded.last_updated_us
+            """,
+            {
+                "symbol": symbol,
+                "price": price,
+                "last_updated_us": last_updated_us,
+            },
+        )
+        DB.commit()
 
 
-async def download_pairs(session, out):
-    for currency in CURRENCIES:
-        await download_pair(session, out, currency)
-
-
-async def main():
-    csv_path = FMP_DIR / "forex.csv"
-    with open(csv_path, "w") as out:
-        async with aiohttp.ClientSession() as session:
-            await download_forex(session, out)
-            await download_pairs(session, out)
+async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
+    async with aiohttp.ClientSession() as session:
+        all_symbols = await download_forex_list(session)
+        return await download_all(
+            download_forex_quote,
+            "forex",
+            max_age=max_age,
+            all_symbols=all_symbols,
+        )
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max-age", default="1d")
+    args = parser.parse_args()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    max_age = parse_timedelta(args.max_age)
+    loop.run_until_complete(main(max_age=max_age))
