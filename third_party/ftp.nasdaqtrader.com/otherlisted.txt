@@ -213,7 +213,6 @@ AMLP|Alerian MLP ETF|P|AMLP|Y|100|N|AMLP
 AMN|AMN Healthcare Services Inc|N|AMN|N|100|N|AMN
 AMOM|QRAFT AI-Enhanced U.S. Large Cap Momentum ETF|P|AMOM|Y|100|N|AMOM
 AMP|Ameriprise Financial, Inc. Common Stock|N|AMP|N|100|N|AMP
-AMPS|Altus Power, Inc. Class A Common Stock|N|AMPS|N|100|N|AMPS
 AMPX|Amprius Technologies, Inc. Common Stock|N|AMPX|N|100|N|AMPX
 AMPX.W|Amprius Technologies, Inc. Warrants to purchase one share of Common Stock at an exercise price of $11.50 per share|N|AMPX.WS|N|100|N|AMPX+
 AMPY|Amplify Energy Corp. Common Stock|N|AMPY|N|100|N|AMPY
@@ -1689,6 +1688,7 @@ EFZ|ProShares Short MSCI EAFE|P|EFZ|Y|100|N|EFZ
 EG|Everest Group, Ltd. Common Stock|N|EG|N|100|N|EG
 EGGS|Tidal Trust III NestYield Total Return Guard ETF|P|EGGS|Y|100|N|EGGS
 EGGY|NestYield Dynamic Income ETF|P|EGGY|Y|100|N|EGGY
+EGLE|Global X Funds Global X S&P 500 U.S. Revenue Leaders ETF|P|EGLE|Y|100|N|EGLE
 EGO|Eldorado Gold Corporation Ordinary Shares|N|EGO|N|100|N|EGO
 EGP|EastGroup Properties, Inc. Common Stock|N|EGP|N|100|N|EGP
 EGUS|iShares Trust iShares ESG Aware MSCI USA Growth ETF|Z|EGUS|Y|100|N|EGUS
@@ -2088,6 +2088,7 @@ FIHL|Fidelis Insurance Holdings Limited Common Shares|N|FIHL|N|100|N|FIHL
 FIIG|First Trust Exchange-Traded Fund IV First Trust Intermediate Duration Investment Grade Corporate ETF|P|FIIG|Y|100|N|FIIG
 FILL|iShares MSCI Global Energy Producers Fund|P|FILL|Y|100|N|FILL
 FINS|Angel Oak Financial Strategies Income Term Trust Common Shares of Beneficial Interest|N|FINS|N|100|N|FINS
+FINS.V|Angel Oak Financial Strategies Income Term Trust Rights (expiring May 14, 2025) Rights when issued|N|FINSrw|N|100|N|FINS^#
 FINT|The Advisors' Inner Circle Fund II Frontier Asset Total International Equity ETF|P|FINT|Y|100|N|FINT
 FINV|FinVolution Group American Depositary Shares|N|FINV|N|100|N|FINV
 FIRI|Tidal ETF Trust FIRE Funds Income Target ETF|P|FIRI|Y|100|N|FIRI
@@ -2104,6 +2105,7 @@ FJAN|FT Vest U.S. Equity Buffer ETF - January|Z|FJAN|Y|100|N|FJAN
 FJUL|FT Vest U.S. Equity Buffer ETF - July|Z|FJUL|Y|100|N|FJUL
 FJUN|FT Vest U.S. Equity Buffer ETF - June|Z|FJUN|Y|100|N|FJUN
 FL|Foot Locker, Inc.|N|FL|N|100|N|FL
+FLAG|Global X Funds Global X S&P 500 U.S. Market Leaders Top 50 ETF|P|FLAG|Y|100|N|FLAG
 FLAO|AIM ETF Products Trust AllianzIM U.S. Equity 6 Month Floor5 Apr/Oct ETF|P|FLAO|Y|100|N|FLAO
 FLAU|Franklin FTSE Australia ETF|P|FLAU|Y|100|N|FLAU
 FLAX|Franklin FTSE Asia ex Japan ETF|P|FLAX|Y|100|N|FLAX
@@ -2863,7 +2865,7 @@ IBUF|SHL Telemedicine Ltd Innovator International Developed 10 Buffer ETF - Quar
 IBUY|Amplify ETF Trust Amplify Online Retail ETF|P|IBUY|Y|100|N|IBUY
 ICAP|Infrastructure Capital Equity Income ETF|P|ICAP|Y|100|N|ICAP
 ICE|Intercontinental Exchange Inc. Common Stock|N|ICE|N|100|N|ICE
-ICF|iShares Cohen & Steers REIT ETF|Z|ICF|Y|100|N|ICF
+ICF|iShares Select U.S. REIT ETF|Z|ICF|Y|100|N|ICF
 ICL|ICL Group Ltd. Ordinary Shares|N|ICL|N|100|N|ICL
 ICLO|Invesco Actively Managed Exchange-Traded Fund Trus Invesco AAA CLO Floating Rate Note ETF|Z|ICLO|Y|100|N|ICLO
 ICOI|Bitwise Funds Trust Bitwise COIN Option Income Strategy ETF|P|ICOI|Y|100|N|ICOI
@@ -3784,8 +3786,6 @@ MKC.V|McCormick & Company, Incorporated Common Stock|N|MKC.V|N|100|N|MKC.V
 MKFG|Markforged Holding Corporation Common Stock|N|MKFG|N|100|N|MKFG
 MKL|Markel Group Inc. Common Stock|N|MKL|N|10|N|MKL
 MKOR|Matthews International Funds Matthews Korea Active ETF|P|MKOR|Y|100|N|MKOR
-ML|MoneyLion Inc. Class A Common Stock|N|ML|N|100|N|ML
-ML.W|MoneyLion Inc. Warrants, each whole warrant exercisable for one share of Class A common stock at an exercise price of $11.50 per share|N|ML.WS|N|100|N|ML+
 MLDR|Global X Funds Global X Intermediate-Term Treasury Ladder ETF|P|MLDR|Y|100|N|MLDR
 MLI|Mueller Industries, Inc. Common Stock|N|MLI|N|100|N|MLI
 MLM|Martin Marietta Materials, Inc. Common Stock|N|MLM|N|100|N|MLM
@@ -4920,6 +4920,7 @@ RNR|RenaissanceRe Holdings Ltd. Common Stock|N|RNR|N|100|N|RNR
 RNR$F|RenaissanceRe Holdings Ltd. Depositary Shares, each Representing a 1/1,000th Interest in a 5.750% Series F Preference Share|N|RNRpF|N|100|N|RNR-F
 RNR$G|RenaissanceRe Holdings Ltd. Depositary Shares, each representing a 1/1,000th interest in a share of 4.20% Series G Preference Shares|N|RNRpG|N|100|N|RNR-G
 RNST|Renasant Corporation Common Stock|N|RNST|N|100|N|RNST
+RNTY|Tidal Trust II YieldMax  Target 12  Real Estate Option Income ETF|P|RNTY|Y|100|N|RNTY
 RNWZ|Listed Funds Trust TrueShares Eagle Global Renewable Energy Income ETF|P|RNWZ|Y|100|N|RNWZ
 ROAM|Hartford Multifactor Emerging Markets ETF|P|ROAM|Y|100|N|ROAM
 ROBN|ETF Opportunities Trust T-Rex 2X Long HOOD Daily Target ETF|Z|ROBN|Y|100|N|ROBN
@@ -5531,7 +5532,6 @@ SVV|Savers Value Village, Inc. Common Stock|N|SVV|N|100|N|SVV
 SVXY|ProShares Short VIX Short Term Futures ETF|Z|SVXY|Y|100|N|SVXY
 SW|Smurfit WestRock plc Ordinary Shares|N|SW|N|100|N|SW
 SWAN|Amplify ETF Trust Amplify BlackSwan Growth & Treasury Core ETF|P|SWAN|Y|100|N|SWAN
-SWI|SolarWinds Corporation Common Stock|N|SWI|N|100|N|SWI
 SWK|Stanley Black & Decker, Inc. Common Stock|N|SWK|N|100|N|SWK
 SWX|Southwest Gas Holdings, Inc. Common Stock (DE)|N|SWX|N|100|N|SWX
 SWZ|Total Return Securities Fund Common Stock|N|SWZ|N|100|N|SWZ
@@ -5609,6 +5609,7 @@ TDY|Teledyne Technologies Incorporated Common Stock|N|TDY|N|100|N|TDY
 TE|T1 Energy Inc. Common Stock|N|TE|N|100|N|TE
 TE.W|T1 Energy Inc. Warrants, each whole warrant exercisable to purchase one Common Stock at an exercise price of $11.50 per share|N|TE.WS|N|100|N|TE+
 TEAF|Tortoise Sustainable and Social Impact Term Fund Common shares of beneficial interest|N|TEAF|N|100|N|TEAF
+TEC|Harbor ETF Trust Harbor Transformative Technologies ETF|P|TEC|Y|100|N|TEC
 TECB|iShares U.S. Tech Breakthrough Multisector ETF|P|TECB|Y|100|N|TECB
 TECK|Teck Resources Ltd Ordinary Shares|N|TECK|N|100|N|TECK
 TECL|Direxion Technology Bull 3X Shares|P|TECL|Y|100|N|TECL
@@ -5728,6 +5729,7 @@ TOL|Toll Brothers, Inc. Common Stock|N|TOL|N|100|N|TOL
 TOLL|Tema ETF Trust Tema Monopolies and Oligopolies ETF|Z|TOLL|Y|100|N|TOLL
 TOLZ|ProShares DJ Brookfield Global Infrastructure ETF|P|TOLZ|Y|100|N|TOLZ
 TOON|Kartoon Studios, Inc. Common Stock|A|TOON|N|100|N|TOON
+TOPC|iShares Trust iShares S&P 500 3% Capped ETF|P|TOPC|Y|100|N|TOPC
 TOPP|Toppoint Holdings Inc. Common Stock|A|TOPP|N|100|N|TOPP
 TOPS|TOP Ships, Inc. Common Stock|A|TOPS|N|100|N|TOPS
 TOPT|iShares Trust iShares Top 20 U.S. Stocks ETF|P|TOPT|Y|100|N|TOPT
@@ -5824,7 +5826,7 @@ TWO|Two Harbors Investment Corp|N|TWO|N|100|N|TWO
 TWO$A|Two Harbors Investments Corp 8.125% Series A Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock ($25.00 liquidation preference per share)|N|TWOpA|N|100|N|TWO-A
 TWO$B|Two Harbors Investments Corp 7.625% Series B Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock|N|TWOpB|N|100|N|TWO-B
 TWO$C|Two Harbors Investments Corp 7.25% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock|N|TWOpC|N|100|N|TWO-C
-TWOX|iShares Trust iShares Large Cap Accelerated ETF|Z|TWOX|Y|100|N|TWOX
+TWOX|iShares Large Cap Accelerated Outcome ETF|Z|TWOX|Y|100|N|TWOX
 TX|Ternium S.A. Ternium S.A. American Depositary Shares (each representing ten shares, USD1.00 par value)|N|TX|N|100|N|TX
 TXNM|TXNM Energy, Inc. Common Stock|N|TXNM|N|100|N|TXNM
 TXO|TXO Partners, L.P. Common Units Representing Limited Partner Interests|N|TXO|N|100|N|TXO
@@ -5919,7 +5921,6 @@ UPW|ProShares Ultra Utilities|P|UPW|Y|100|N|UPW
 URA|Global X Uranium ETF|P|URA|Y|100|N|URA
 URAA|Direxion Shares ETF Trust Direxion Daily Uranium Industry Bull 2X Shares|P|URAA|Y|100|N|URAA
 URAN|Themes ETF Trust Themes Uranium & Nuclear ETF|Z|URAN|Y|100|N|URAN
-URAX|Tidal Trust II Defiance Daily Target 2x Long Uranium ETF|P|URAX|Y|100|N|URAX
 URE|ProShares Ultra Real Estate|P|URE|Y|100|N|URE
 URG|Ur Energy Inc Common Shares (Canada)|A|URG|N|100|N|URG
 URI|United Rentals, Inc. Common Stock|N|URI|N|100|N|URI
@@ -6475,4 +6476,4 @@ ZVOL|Volatility Premium Plus ETF|Z|ZVOL|Y|100|N|ZVOL
 ZVV|NYSE ARCA test stock|P|ZVV|N|100|Y|ZVV
 ZWS|Zurn Elkay Water Solutions Corporation Common Stock|N|ZWS|N|100|N|ZWS
 ZXIET|IEX Test Company Test Symbol Three for IEX|V|ZXIET|N|100|Y|ZXIET
-File Creation Time: 0415202518:01||||||
+File Creation Time: 0417202521:31||||||

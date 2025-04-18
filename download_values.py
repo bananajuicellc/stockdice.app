@@ -18,14 +18,11 @@ import argparse
 import asyncio
 import datetime
 import logging
-import time
 import sys
-
-import aiohttp
 
 from helpers import *
 
-from typing import Optional
+from typing import Literal
 
 
 FMP_QUOTE = "https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={apikey}"
@@ -160,17 +157,7 @@ async def download_market_cap(session, symbol: str, last_updated_us: int):
         DB.commit()
 
 
-async def main(download_fn, table: str, max_age: datetime.timedelta = datetime.timedelta(days=1)):
-    all_symbols = load_symbols()
-    return await download_all(download_fn, table, max_age=max_age, all_symbols=all_symbols)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--max-age", default="1d")
-    parser.add_argument("command")
-    args = parser.parse_args()
-    command = args.command
+async def main(*, command: Literal["quote", "balance-sheet", "income"], max_age: datetime.timedelta = datetime.timedelta(days=1)):
     if command == "quote":
         table = "quotes"
         download_fn = download_market_cap
@@ -183,7 +170,17 @@ if __name__ == "__main__":
     else:
         sys.exit("expected {quote,balance-sheet,income}")
 
+    all_symbols = load_symbols()
+    return await download_all(download_fn, table, max_age=max_age, all_symbols=all_symbols)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max-age", default="1d")
+    parser.add_argument("command")
+    args = parser.parse_args()
+    command = args.command
     max_age = parse_timedelta(args.max_age)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(main(download_fn, table, max_age=max_age))
+    loop.run_until_complete(main(command=command, max_age=max_age))

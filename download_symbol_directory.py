@@ -78,6 +78,10 @@ def write_all_symbols():
             symbols_file.write(symbol + "\n")
 
 
-if __name__ == "__main__":
+def main():
     download_symbol_directory()
     write_all_symbols()
+
+
+if __name__ == "__main__":
+    main()

@@ -19,6 +19,7 @@ import asyncio
 import datetime
 import pathlib
 import functools
+import random
 import re
 import sqlite3
 import time
@@ -59,7 +60,9 @@ def retry_fmp(async_fn):
             try:
                 value = await async_fn(*args)
             except RateLimitError as exp:
-                await asyncio.sleep(exp.seconds + (exp.millis / 1000.0))
+                sleep_seconds = exp.seconds + (exp.millis / 1000.0)
+                jitter = random.randint(0, int(sleep_seconds) + 1)
+                await asyncio.sleep(sleep_seconds + jitter)
             except:
                 raise
             else:
