@@ -41,73 +41,8 @@ FMP_API_KEY = config["FMP_API_KEY"]
 
 BATCH_SIZE = 10
 BATCH_WAIT = 1
-RATE_LIMIT_STATUS = 429
-RATE_LIMIT_SECONDS = "X-Rate-Limit-Retry-After-Seconds"
-RATE_LIMIT_MILLISECONDS = "X-Rate-Limit-Retry-After-Milliseconds"
 
 forex_to_usd = None
-
-class RateLimitError(Exception):
-    def __init__(self, seconds, millis):
-        self.seconds = seconds
-        self.millis = millis
-
-
-def retry_fmp(async_fn):
-    @functools.wraps(async_fn)
-    async def wrapped(*args):
-        while True:
-            try:
-                value = await async_fn(*args)
-            except RateLimitError as exp:
-                sleep_seconds = exp.seconds + (exp.millis / 1000.0)
-                jitter = random.randint(0, int(sleep_seconds) + 1)
-                await asyncio.sleep(sleep_seconds + jitter)
-            except:
-                raise
-            else:
-                return value
-
-    return wrapped
-
-
-async def check_status(resp):
-    if resp.status == RATE_LIMIT_STATUS:
-        raise RateLimitError(1, 0)
-    resp_json = await resp.json()
-    if RATE_LIMIT_SECONDS in resp_json or RATE_LIMIT_MILLISECONDS in resp_json:
-        raise RateLimitError(
-            float(resp_json.get(RATE_LIMIT_SECONDS, 0)),
-            float(resp_json.get(RATE_LIMIT_MILLISECONDS, 0)),
-        )
-    return resp_json
-
-
-TIMEDELTA_REGEX = re.compile(
-    r"^(?P<length>[0-9]+)(?P<units>w|d|h|s|ms|us)$"
-)
-TIMEDELTA_UNITS = {
-    "w": "weeks",
-    "d": "days",
-    "h": "hours",
-    # Intentionally omitting minutes since it could be ambiguous with months.
-    "s": "seconds",
-    "ms": "milliseconds",
-    "us": "microseconds",
-}
-
-
-def parse_timedelta(value: str) -> datetime.timedelta:
-    parsed = TIMEDELTA_REGEX.match(value)
-    if not parsed:
-        raise ValueError(r"Invalid timedelta: {value}")
-    groups = parsed.groupdict()
-    length = int(groups["length"])
-    units = groups["units"]
-    kwargs = {
-        TIMEDELTA_UNITS[units]: length,
-    }
-    return datetime.timedelta(**kwargs)
 
 
 def load_forex():
