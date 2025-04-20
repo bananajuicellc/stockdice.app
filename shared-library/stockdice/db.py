@@ -11,3 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+# DB = sqlite3.connect(DIR / "third_party" / "financialmodelingprep.com" / "stockdice.sqlite")
+
+
+def is_fresh(db, *, table: str, symbol: str, max_last_updated_us: int) -> bool:
+    cursor = db.execute(
+        f"SELECT last_updated_us FROM {table} WHERE symbol = :symbol", {"symbol": symbol}
+    )
+    previous_last_updated = cursor.fetchone()
+    return (
+        previous_last_updated is not None
+        and previous_last_updated[0] is not None
+        and previous_last_updated[0] > max_last_updated_us
+    )

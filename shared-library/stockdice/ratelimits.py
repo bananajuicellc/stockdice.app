@@ -13,10 +13,24 @@
 # limitations under the License.
 
 import asyncio
+import datetime
 import functools
 import random
+import time
+from typing import Iterable
+
+import aiohttp
+
+import stockdice.db
 
 
+# Rate limit from our side. We only want to download BATCH_SIZE records per
+# BATCH_WAIT seconds. At 300 API calls / minute, we can do at most 5 per second.
+BATCH_SIZE = 5
+BATCH_WAIT = 1
+
+# Rate limit from server side. This is especially useful when we're downloading
+# from several APIs at once.
 RATE_LIMIT_STATUS = 429
 RATE_LIMIT_SECONDS = "X-Rate-Limit-Retry-After-Seconds"
 RATE_LIMIT_MILLISECONDS = "X-Rate-Limit-Retry-After-Milliseconds"
@@ -26,7 +40,6 @@ class RateLimitError(Exception):
     def __init__(self, seconds, millis):
         self.seconds = seconds
         self.millis = millis
-
 
 
 async def check_status(resp):
@@ -57,3 +70,41 @@ def retry_fmp(async_fn):
                 return value
 
     return wrapped
+
+
+async def download_all(
+    download_fn,
+    db,
+    *,
+    table: str,
+    max_age: datetime.timedelta = datetime.timedelta(days=1),
+    all_symbols: Iterable[str],
+):
+    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    last_updated_us = (now - epoch) / datetime.timedelta(microseconds=1)
+
+    # The oldest we'll allow a value to be before we have to refresh it.
+    max_last_updated_us = ((now - max_age) - epoch) / datetime.timedelta(microseconds=1)
+
+    async with aiohttp.ClientSession() as session:
+        batch_index = 0
+        batch_start = time.monotonic()
+        for symbol in all_symbols:
+            if stockdice.db.is_fresh(db, table=table, symbol=symbol, max_last_updated_us=max_last_updated_us):
+                continue
+
+            # Rate limit! We only want to download BATCH_SIZE records per
+            # BATCH_WAIT seconds.
+            if batch_index >= BATCH_SIZE:
+                batch_time = time.monotonic() - batch_start
+                remaining = BATCH_WAIT - batch_time
+                if remaining > 0:
+                    await asyncio.sleep(remaining)
+                batch_start = time.monotonic()
+                batch_index = 0
+            await download_fn(
+                session,
+                symbol,
+                last_updated_us,
+            )
