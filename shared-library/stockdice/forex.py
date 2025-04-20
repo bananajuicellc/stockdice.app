@@ -1,4 +1,3 @@
-# coding: utf-8
 # Copyright 2021 Banana Juice LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +14,15 @@
 
 from __future__ import annotations
 
+import argparse
+import asyncio
 import datetime
 import logging
-import pathlib
 
 import aiohttp
-import toml
-
 import stockdice.ratelimits
+import stockdice.config
+import stockdice.timedeltas
 
 
 FMP_FOREX_LIST = "https://financialmodelingprep.com/stable/forex-list?apikey={apikey}"
@@ -31,10 +31,11 @@ FMP_FOREX_QUOTE = "https://financialmodelingprep.com/stable/quote?symbol={symbol
 forex_to_usd = None
 
 
-def load_forex(db):
+def load_forex():
     global forex_to_usd
     forex_to_usd = {"USD": 1.0}
 
+    db = stockdice.config.DB
     rows = db.execute(
         """
         SELECT from_currency, price
@@ -47,9 +48,9 @@ def load_forex(db):
         forex_to_usd[from_currency] = price
 
 
-def to_usd(db, *, curr, value):
+def to_usd(*, curr, value):
     if forex_to_usd is None:
-        load_forex(db)
+        load_forex()
     if curr is None or curr != curr or curr in {"None", "unknown"}:
         # Assume USD? None usually corresponds to no reported value.
         return value
@@ -58,8 +59,9 @@ def to_usd(db, *, curr, value):
 
 
 @stockdice.ratelimits.retry_fmp
-async def download_forex_list(*, db, session):
-    url = FMP_FOREX_LIST.format(apikey=FMP_API_KEY)
+async def download_forex_list(*, session):
+    db = stockdice.config.DB
+    url = FMP_FOREX_LIST.format(apikey=stockdice.config.FMP_API_KEY)
     symbols = []
 
     async with session.get(url) as resp:
@@ -99,8 +101,9 @@ async def download_forex_list(*, db, session):
 
 
 @stockdice.ratelimits.retry_fmp
-async def download_forex_quote(*, db, session, symbol: str, last_updated_us: int):
-    url = FMP_FOREX_QUOTE.format(symbol=symbol, apikey=FMP_API_KEY)
+async def download_forex_quote(*, session, symbol: str, last_updated_us: int):
+    db = stockdice.config.DB
+    url = FMP_FOREX_QUOTE.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)
     async with session.get(url) as resp:
         resp_json = await stockdice.ratelimits.check_status(resp)
         if resp_json:
@@ -128,31 +131,23 @@ async def download_forex_quote(*, db, session, symbol: str, last_updated_us: int
         db.commit()
 
 
-async def main(*, db, max_age: datetime.timedelta = datetime.timedelta(days=1)):
+async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     async with aiohttp.ClientSession() as session:
-        all_symbols = await download_forex_list(db=db, session=session)
+        all_symbols = await download_forex_list(session=session)
         return await stockdice.ratelimits.download_all(
             download_forex_quote,
-            db=db,
             table="forex",
             max_age=max_age,
             all_symbols=all_symbols,
         )
 
 
-__all__ = [
-    "DB",
-    "DIR",
-    "NASDAQ_DIR",
-    "FMP_DIR",
-    "FMP_API_KEY",
-    "RateLimitError",
-    "check_status",
-    "parse_timedelta",
-    "retry_fmp",
-    "to_usd",
-    "is_fresh",
-    "download_all",
-]
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max-age", default="1d")
+    args = parser.parse_args()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    max_age = stockdice.timedeltas.parse_timedelta(args.max_age)
+    loop.run_until_complete(main(max_age=max_age))
+

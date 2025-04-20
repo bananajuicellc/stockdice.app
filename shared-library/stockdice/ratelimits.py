@@ -56,10 +56,10 @@ async def check_status(resp):
 
 def retry_fmp(async_fn):
     @functools.wraps(async_fn)
-    async def wrapped(*args):
+    async def wrapped(*args, **kwargs):
         while True:
             try:
-                value = await async_fn(*args)
+                value = await async_fn(*args, **kwargs)
             except RateLimitError as exp:
                 sleep_seconds = exp.seconds + (exp.millis / 1000.0)
                 jitter = random.randint(0, int(sleep_seconds) + 1)
@@ -75,7 +75,6 @@ def retry_fmp(async_fn):
 async def download_all(
     download_fn,
     *,
-    db,
     table: str,
     max_age: datetime.timedelta = datetime.timedelta(days=1),
     all_symbols: Iterable[str],
@@ -91,7 +90,7 @@ async def download_all(
         batch_index = 0
         batch_start = time.monotonic()
         for symbol in all_symbols:
-            if stockdice.db.is_fresh(db, table=table, symbol=symbol, max_last_updated_us=max_last_updated_us):
+            if stockdice.db.is_fresh(table=table, symbol=symbol, max_last_updated_us=max_last_updated_us):
                 continue
 
             # Rate limit! We only want to download BATCH_SIZE records per
@@ -104,7 +103,7 @@ async def download_all(
                 batch_start = time.monotonic()
                 batch_index = 0
             await download_fn(
-                session,
-                symbol,
-                last_updated_us,
+                session=session,
+                symbol=symbol,
+                last_updated_us=last_updated_us,
             )

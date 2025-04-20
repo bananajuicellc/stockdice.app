@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import stockdice.config
 
 
 
-def is_fresh(db, *, table: str, symbol: str, max_last_updated_us: int) -> bool:
+def is_fresh(*, table: str, symbol: str, max_last_updated_us: int) -> bool:
+    db = stockdice.config.DB
     cursor = db.execute(
         f"SELECT last_updated_us FROM {table} WHERE symbol = :symbol", {"symbol": symbol}
     )
