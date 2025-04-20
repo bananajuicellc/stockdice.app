@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-# DB = sqlite3.connect(DIR / "third_party" / "financialmodelingprep.com" / "stockdice.sqlite")
 
 
 def is_fresh(db, *, table: str, symbol: str, max_last_updated_us: int) -> bool:

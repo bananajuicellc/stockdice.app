@@ -74,8 +74,8 @@ def retry_fmp(async_fn):
 
 async def download_all(
     download_fn,
-    db,
     *,
+    db,
     table: str,
     max_age: datetime.timedelta = datetime.timedelta(days=1),
     all_symbols: Iterable[str],
