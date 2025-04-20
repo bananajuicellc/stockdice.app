@@ -43,7 +43,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    packages=find_packages(where="stockdice"),
+    packages=find_packages(),
     python_requires=">=3.10, <4",
     install_requires=[],
 )
