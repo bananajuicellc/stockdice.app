@@ -25,6 +25,11 @@ from helpers import *
 
 
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
+    # Pseudocode:
+    # Download quote in a loop.
+    # In a background thread, every 5 minutes or so, copy a backup to GCS
+    # When we're outside of trading hours, also download balance-sheet and income.
+
     download_symbol_directory.main()
 
     await asyncio.gather(
