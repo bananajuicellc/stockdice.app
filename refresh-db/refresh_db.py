@@ -18,10 +18,8 @@ import argparse
 import asyncio
 import datetime
 
-import download_forex
-import download_symbol_directory
-import download_values
-from helpers import *
+import stockdice.timedeltas
+
 
 
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
@@ -45,5 +43,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    max_age = parse_timedelta(args.max_age)
+    max_age = stockdice.timedeltas.parse_timedelta(args.max_age)
     loop.run_until_complete(main(max_age=max_age))
