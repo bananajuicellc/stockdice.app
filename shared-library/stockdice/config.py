@@ -38,7 +38,7 @@ class LocalConfig:
     @property
     def db(self):
         if self._db is None:
-            self._db = sqlite3.connect(FMP_DIR / "stockdice.sqlite")
+            self._db = sqlite3.connect(FMP_DIR / "stockdice.sqlite", autocommit=False)
         return self._db
 
 

@@ -22,7 +22,7 @@ import logging
 import aiohttp
 import stockdice.ratelimits
 import stockdice.config
-import stockdice.timedeltas
+import stockdice.timeutils
 
 
 FMP_FOREX_LIST = "https://financialmodelingprep.com/stable/forex-list?apikey={apikey}"
@@ -56,6 +56,16 @@ def to_usd(*, curr, value):
         return value
 
     return forex_to_usd[curr] * value
+
+
+async def download_forex(*, max_age: datetime.timedelta = datetime.timedelta(days=1), session: aiohttp.ClientSession):
+    all_symbols = await download_forex_list(session=session)
+    return await stockdice.ratelimits.download_all(
+        download_forex_quote,
+        table="forex",
+        max_age=max_age,
+        all_symbols=all_symbols,
+    )
 
 
 @stockdice.ratelimits.retry_fmp
@@ -133,13 +143,7 @@ async def download_forex_quote(*, session, symbol: str, last_updated_us: int):
 
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     async with aiohttp.ClientSession() as session:
-        all_symbols = await download_forex_list(session=session)
-        return await stockdice.ratelimits.download_all(
-            download_forex_quote,
-            table="forex",
-            max_age=max_age,
-            all_symbols=all_symbols,
-        )
+        return await download_forex(max_age=max_age, session=session)
 
 
 if __name__ == "__main__":
@@ -148,6 +152,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    max_age = stockdice.timedeltas.parse_timedelta(args.max_age)
+    max_age = stockdice.timeutils.parse_timedelta(args.max_age)
     loop.run_until_complete(main(max_age=max_age))
 

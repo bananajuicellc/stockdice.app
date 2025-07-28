@@ -1,0 +1,17 @@
+[project]
+name = "stockdice-app"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "stockdice",
+]
+
+[tool.uv.workspace]
+members = [
+    "shared-library",
+]
+
+[tool.uv.sources]
+stockdice = { workspace = true }

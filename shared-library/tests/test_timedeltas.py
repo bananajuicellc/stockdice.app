@@ -17,7 +17,7 @@ import datetime
 
 import pytest
 
-import stockdice.timedeltas
+import stockdice.timeutils
 
 
 @pytest.mark.parametrize(
@@ -34,5 +34,5 @@ import stockdice.timedeltas
     ),
 )
 def test_parse_timedelta(value: str, expected: datetime.timedelta):
-    got = stockdice.timedeltas.parse_timedelta(value)
+    got = stockdice.timeutils.parse_timedelta(value)
     assert got == expected
