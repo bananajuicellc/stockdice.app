@@ -15,3 +15,8 @@ members = [
 
 [tool.uv.sources]
 stockdice = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "ipython>=9.4.0",
+]

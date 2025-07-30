@@ -53,3 +53,9 @@ async def download_symbol_list(*, session):
         )
         db.execute(f"DELETE FROM symbol WHERE last_updated_us <> {last_updated_us};")
         db.commit()
+
+
+def list_symbols():
+    db = stockdice.config.DB
+    # TODO: support global stocks.
+    return [row[0] for row in db.execute("SELECT symbol FROM symbol WHERE trading_currency = 'USD';")]

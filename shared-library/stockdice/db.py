@@ -17,9 +17,9 @@ import stockdice.config
 
 def create_all_tables(db):
     create_balance_sheet(db)
+    create_company_profile(db)
     create_forex(db)
     create_income(db)
-    create_quote(db)
     create_symbols(db)
 
 
@@ -66,18 +66,6 @@ def create_income(db):
     db.commit()
 
 
-def create_quote(db):
-    db.execute("DROP TABLE IF EXISTS quotes;")
-    db.execute("""
-    CREATE TABLE quotes(
-    symbol STRING PRIMARY KEY,
-    market_cap_usd REAL,
-    last_updated_us INTEGER
-    );
-    """)
-    db.commit()
-
-
 def create_symbols(db):
     db.execute("DROP TABLE IF EXISTS symbol;")
     db.execute("""
@@ -90,6 +78,53 @@ def create_symbols(db):
     );
     """)
     db.commit()
+
+
+def create_company_profile(db):
+    db.execute("DROP TABLE IF EXISTS company_profile;")
+    db.execute(
+        """
+        CREATE TABLE company_profile (
+            symbol TEXT PRIMARY KEY,
+            price REAL,
+            marketCap INTEGER,
+            beta REAL,
+            lastDividend REAL,
+            range TEXT,
+            change REAL,
+            changePercentage REAL,
+            volume INTEGER,
+            averageVolume INTEGER,
+            companyName TEXT,
+            currency TEXT,
+            cik TEXT,
+            isin TEXT,
+            cusip TEXT,
+            exchangeFullName TEXT,
+            exchange TEXT,
+            industry TEXT,
+            website TEXT,
+            description TEXT,
+            ceo TEXT,
+            sector TEXT,
+            country TEXT,
+            fullTimeEmployees INTEGER,
+            phone TEXT,
+            address TEXT,
+            city TEXT,
+            state TEXT,
+            zip TEXT,
+            image TEXT,
+            ipoDate TEXT,
+            defaultImage BOOLEAN,
+            isEtf BOOLEAN,
+            isActivelyTrading BOOLEAN,
+            isAdr BOOLEAN,
+            isFund BOOLEAN,
+            last_updated_us INTEGER
+        );
+        """
+    )
 
 
 def is_fresh(*, table: str, symbol: str, max_last_updated_us: int) -> bool:

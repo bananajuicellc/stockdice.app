@@ -43,7 +43,7 @@ def parse_timedelta(value: str) -> datetime.timedelta:
     return datetime.timedelta(**kwargs)
 
 
-def now_in_microseconds():
+def now_in_microseconds() -> int:
     epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
     now = datetime.datetime.now(datetime.timezone.utc)
-    return (now - epoch) / datetime.timedelta(microseconds=1)
+    return (now - epoch) // datetime.timedelta(microseconds=1)
