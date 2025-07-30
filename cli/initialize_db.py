@@ -15,41 +15,18 @@
 # limitations under the License.
 
 import argparse
-import sys
 
+import stockdice.config
 import stockdice.db
 
 
-def load_quote(quote_path):
-    quote = pandas.read_csv(quote_path, header=None, names=["symbol", "market_cap_usd"], index_col="symbol")
-    quote = quote.groupby(quote.index).last()
-    quote.to_sql("quotes", DB, if_exists="append")
-
-
-def load_balance_sheet(balance_sheet_path):
-    balance_sheet = pandas.read_csv(
-        balance_sheet_path,
-        header=None,
-        names=["symbol", "book", "currency"],
-        index_col="symbol",
-    )
-    balance_sheet = balance_sheet.groupby(balance_sheet.index).last()
-    balance_sheet.to_sql("balance_sheets", DB, if_exists="append")
-
-
-def load_income(income_path):
-    income = pandas.read_csv(
-        income_path,
-        header=None,
-        names=["symbol", "profit", "revenue", "currency"],
-        index_col="symbol",
-    )
-    income = income.groupby(income.index).last()
-    income.to_sql("incomes", DB, if_exists="append")
-
-
 if __name__ == "__main__":
-    import stockdice.config
-    import stockdice.db
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        default=False,
+    )
+    args = parser.parse_args()
 
-    stockdice.db.create_all_tables(stockdice.config.DB)
+    stockdice.db.create_all_tables(stockdice.config.DB, reset=args.reset)

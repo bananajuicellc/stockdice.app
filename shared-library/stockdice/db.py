@@ -12,19 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 import stockdice.config
 
 
-def create_all_tables(db):
-    create_balance_sheet(db)
-    create_company_profile(db)
-    create_forex(db)
-    create_income(db)
-    create_symbols(db)
+def _table_exists(db, table_name):
+    # https://stackoverflow.com/a/1604121/101923
+    exists = db.execute(
+        f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}';"
+    ).fetchone()
+    return exists is not None
 
 
-def create_balance_sheet(db):
-    db.execute("DROP TABLE IF EXISTS balance_sheets;")
+def create_all_tables(db, *, reset: bool):
+    create_balance_sheet(db, reset=reset)
+    create_company_profile(db, reset=reset)
+    create_forex(db, reset=reset)
+    create_income(db, reset=reset)
+    create_symbols(db, reset=reset)
+
+
+def create_balance_sheet(db, *, reset: bool):
+    if reset:
+        db.execute("DROP TABLE IF EXISTS balance_sheets;")
+    elif _table_exists(db, "balance_sheets"):
+        logging.warning("balance_sheets already exists, skipping")
+        return
+
     db.execute("""
     CREATE TABLE balance_sheets(
     symbol STRING PRIMARY KEY,
@@ -36,8 +51,13 @@ def create_balance_sheet(db):
     db.commit()
 
 
-def create_forex(db):
-    db.execute("DROP TABLE IF EXISTS forex;")
+def create_forex(db, *, reset: bool):
+    if reset:
+        db.execute("DROP TABLE IF EXISTS forex;")
+    elif _table_exists(db, "forex"):
+        logging.warning("forex already exists, skipping")
+        return
+
     db.execute("""
     CREATE TABLE forex(
     symbol STRING PRIMARY KEY,
@@ -52,7 +72,15 @@ def create_forex(db):
     db.commit()
 
 
-def create_income(db):
+def create_income(db, *, reset: bool):
+    db.execute("DROP TABLE IF EXISTS income;")
+
+    if reset:
+        db.execute("DROP TABLE IF EXISTS income;")
+    elif _table_exists(db, "income"):
+        logging.warning("income already exists, skipping")
+        return
+
     db.execute("DROP TABLE IF EXISTS incomes;")
     db.execute("""
     CREATE TABLE incomes(
@@ -66,8 +94,13 @@ def create_income(db):
     db.commit()
 
 
-def create_symbols(db):
-    db.execute("DROP TABLE IF EXISTS symbol;")
+def create_symbols(db, *, reset: bool):
+    if reset:
+        db.execute("DROP TABLE IF EXISTS symbol;")
+    elif _table_exists(db, "symbol"):
+        logging.warning("symbol already exists, skipping")
+        return
+
     db.execute("""
     CREATE TABLE symbol(
     symbol STRING PRIMARY KEY,
@@ -80,8 +113,13 @@ def create_symbols(db):
     db.commit()
 
 
-def create_company_profile(db):
-    db.execute("DROP TABLE IF EXISTS company_profile;")
+def create_company_profile(db, *, reset: bool):
+    if reset:
+        db.execute("DROP TABLE IF EXISTS company_profile;")
+    elif _table_exists(db, "company_profile"):
+        logging.warning("company_profile already exists, skipping")
+        return
+
     db.execute(
         """
         CREATE TABLE company_profile (
