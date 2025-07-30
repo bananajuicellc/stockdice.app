@@ -22,6 +22,7 @@ import aiohttp
 
 import stockdice.company_profile
 import stockdice.forex
+import stockdice.income
 import stockdice.stocklist
 import stockdice.timeutils
 
@@ -39,9 +40,8 @@ async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
         await asyncio.gather(
             stockdice.forex.download_forex(max_age=max_age, session=session),
             stockdice.company_profile.download_all(max_age=max_age, session=session),
-            # download_values.main(command="quote", max_age=max_age),
+            stockdice.income.download_all(max_age=max_age, session=session),
             # download_values.main(command="balance-sheet", max_age=max_age),
-            # download_values.main(command="income", max_age=max_age),
         )
 
 if __name__ == "__main__":

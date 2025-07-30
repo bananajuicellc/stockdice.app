@@ -73,8 +73,6 @@ def create_forex(db, *, reset: bool):
 
 
 def create_income(db, *, reset: bool):
-    db.execute("DROP TABLE IF EXISTS income;")
-
     if reset:
         db.execute("DROP TABLE IF EXISTS income;")
     elif _table_exists(db, "income"):
@@ -82,15 +80,53 @@ def create_income(db, *, reset: bool):
         return
 
     db.execute("DROP TABLE IF EXISTS incomes;")
-    db.execute("""
-    CREATE TABLE incomes(
-    symbol STRING PRIMARY KEY,
-    profit REAL,
-    revenue REAL,
-    currency STRING,
-    last_updated_us INTEGER
-    );
-    """)
+    db.execute(
+        """
+        CREATE TABLE income (
+            date STRING,
+            symbol STRING,
+            reportedCurrency TEXT,
+            cik TEXT,
+            filingDate TEXT,
+            acceptedDate TEXT,
+            fiscalYear INTEGER,
+            period TEXT,
+            revenue INTEGER,
+            costOfRevenue INTEGER,
+            grossProfit INTEGER,
+            researchAndDevelopmentExpenses INTEGER,
+            generalAndAdministrativeExpenses INTEGER,
+            sellingAndMarketingExpenses INTEGER,
+            sellingGeneralAndAdministrativeExpenses INTEGER,
+            otherExpenses INTEGER,
+            operatingExpenses INTEGER,
+            costAndExpenses INTEGER,
+            netInterestIncome INTEGER,
+            interestIncome INTEGER,
+            interestExpense INTEGER,
+            depreciationAndAmortization INTEGER,
+            ebitda INTEGER,
+            ebit INTEGER,
+            nonOperatingIncomeExcludingInterest INTEGER,
+            operatingIncome INTEGER,
+            totalOtherIncomeExpensesNet INTEGER,
+            incomeBeforeTax INTEGER,
+            incomeTaxExpense INTEGER,
+            netIncomeFromContinuingOperations INTEGER,
+            netIncomeFromDiscontinuedOperations INTEGER,
+            otherAdjustmentsToNetIncome INTEGER,
+            netIncome INTEGER,
+            netIncomeDeductions INTEGER,
+            bottomLineNetIncome INTEGER,
+            eps REAL,
+            epsDiluted REAL,
+            weightedAverageShsOut INTEGER,
+            weightedAverageShsOutDil INTEGER,
+            last_updated_us INTEGER,
+            PRIMARY KEY (date, symbol)
+        );
+        """
+    )
     db.commit()
 
 
