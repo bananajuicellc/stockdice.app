@@ -42,9 +42,7 @@ def load_symbols():
 
 
 @retry_fmp
-async def download_income(
-    session, symbol: str, last_updated_us: int
-):
+async def download_income(session, symbol: str, last_updated_us: int):
     """
     https://www.ftserussell.com/research/factor-exposure-indexes-value-factor
 
@@ -157,7 +155,11 @@ async def download_market_cap(session, symbol: str, last_updated_us: int):
         DB.commit()
 
 
-async def main(*, command: Literal["quote", "balance-sheet", "income"], max_age: datetime.timedelta = datetime.timedelta(days=1)):
+async def main(
+    *,
+    command: Literal["quote", "balance-sheet", "income"],
+    max_age: datetime.timedelta = datetime.timedelta(days=1),
+):
     if command == "quote":
         table = "quotes"
         download_fn = download_market_cap
@@ -171,7 +173,9 @@ async def main(*, command: Literal["quote", "balance-sheet", "income"], max_age:
         sys.exit("expected {quote,balance-sheet,income}")
 
     all_symbols = load_symbols()
-    return await download_all(download_fn, table, max_age=max_age, all_symbols=all_symbols)
+    return await download_all(
+        download_fn, table, max_age=max_age, all_symbols=all_symbols
+    )
 
 
 if __name__ == "__main__":

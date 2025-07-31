@@ -19,14 +19,17 @@ import asyncio
 import datetime
 import logging
 
-import aiohttp
+import httpx
+
 import stockdice.ratelimits
 import stockdice.config
 import stockdice.timeutils
 
 
 FMP_FOREX_LIST = "https://financialmodelingprep.com/stable/forex-list?apikey={apikey}"
-FMP_FOREX_QUOTE = "https://financialmodelingprep.com/stable/quote?symbol={symbol}&apikey={apikey}"
+FMP_FOREX_QUOTE = (
+    "https://financialmodelingprep.com/stable/quote?symbol={symbol}&apikey={apikey}"
+)
 
 forex_to_usd = None
 
@@ -58,92 +61,110 @@ def to_usd(*, curr, value):
     return forex_to_usd[curr] * value
 
 
-async def download_forex(*, max_age: datetime.timedelta = datetime.timedelta(days=1), session: aiohttp.ClientSession):
-    all_symbols = await download_forex_list(session=session)
-    return await stockdice.ratelimits.download_all(
-        download_forex_quote,
-        table="forex",
-        max_age=max_age,
-        all_symbols=all_symbols,
+async def download_forex(
+    *,
+    max_age: datetime.timedelta = datetime.timedelta(days=1),
+    client: httpx.AsyncClient,
+):
+    all_symbols = await download_forex_list(client=client)
+    return await asyncio.gather(
+        *[
+            download_forex_quote(client=client, symbol=symbol, max_age=max_age)
+            for symbol in all_symbols
+        ]
     )
 
 
 @stockdice.ratelimits.retry_fmp
-async def download_forex_list(*, session):
+async def download_forex_list(*, client: httpx.AsyncClient):
     db = stockdice.config.DB
     url = FMP_FOREX_LIST.format(apikey=stockdice.config.FMP_API_KEY)
     symbols = []
 
-    async with session.get(url) as resp:
-        resp_json = await stockdice.ratelimits.check_status(resp)
-        for forex in resp_json:
-            symbol = forex.get("symbol")
-            from_currency = forex.get("fromCurrency")
-            to_currency = forex.get("toCurrency")
-            from_name = forex.get("fromName")
-            to_name = forex.get("toName")
+    resp = await stockdice.ratelimits.get(client, url)
+    resp_json = stockdice.ratelimits.check_status(resp)
+    for forex in resp_json:
+        symbol = forex.get("symbol")
+        from_currency = forex.get("fromCurrency")
+        to_currency = forex.get("toCurrency")
+        from_name = forex.get("fromName")
+        to_name = forex.get("toName")
 
-            if to_currency is None or to_currency.upper() != "USD":
-                continue
+        if to_currency is None or to_currency.upper() != "USD":
+            continue
 
-            db.execute(
-                """INSERT INTO forex
-                (symbol, from_currency, to_currency, from_name, to_name)
-                VALUES (:symbol, :from_currency, :to_currency, :from_name, :to_name)
-                ON CONFLICT(symbol) DO UPDATE
-                SET from_currency=excluded.from_currency,
-                to_currency=excluded.to_currency,
-                from_name=excluded.from_name,
-                to_name=excluded.to_name;
-                """,
-                {
-                    "symbol": symbol,
-                    "from_currency": from_currency,
-                    "to_currency": to_currency,
-                    "from_name": from_name,
-                    "to_name": to_name,
-                },
-            )
-            db.commit()
-            symbols.append(symbol)
+        db.execute(
+            """INSERT INTO forex
+            (symbol, from_currency, to_currency, from_name, to_name)
+            VALUES (:symbol, :from_currency, :to_currency, :from_name, :to_name)
+            ON CONFLICT(symbol) DO UPDATE
+            SET from_currency=excluded.from_currency,
+            to_currency=excluded.to_currency,
+            from_name=excluded.from_name,
+            to_name=excluded.to_name;
+            """,
+            {
+                "symbol": symbol,
+                "from_currency": from_currency,
+                "to_currency": to_currency,
+                "from_name": from_name,
+                "to_name": to_name,
+            },
+        )
+        db.commit()
+        symbols.append(symbol)
 
     return symbols
 
 
 @stockdice.ratelimits.retry_fmp
-async def download_forex_quote(*, session, symbol: str, last_updated_us: int):
+async def download_forex_quote(
+    *, client: httpx.AsyncClient, symbol: str, max_age: datetime.timedelta
+):
     db = stockdice.config.DB
+
+    now_us = stockdice.timeutils.now_in_microseconds()
+    last_updated = db.execute(
+        "SELECT last_updated_us FROM forex WHERE symbol = :symbol", {"symbol": symbol}
+    ).fetchone()
+    if (
+        last_updated
+        and datetime.timedelta(microseconds=now_us - last_updated[0]) <= max_age
+    ):
+        logging.info(f"Data already fresh, skipping forex for {symbol}.")
+        return
+
     url = FMP_FOREX_QUOTE.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)
-    async with session.get(url) as resp:
-        resp_json = await stockdice.ratelimits.check_status(resp)
-        if resp_json:
-            price = resp_json[0].get("price")
+    resp = await stockdice.ratelimits.get(client, url)
+    resp_json = stockdice.ratelimits.check_status(resp)
+    if resp_json:
+        price = resp_json[0].get("price")
 
-        if price is None:
-            logging.warning(f"no price for {symbol}")
-        else:
-            price = float(price)
+    if price is None:
+        logging.warning(f"no price for {symbol}")
+    else:
+        price = float(price)
 
-        db.execute(
-            """INSERT INTO forex
-            (symbol, price, last_updated_us)
-            VALUES (:symbol, :price, :last_updated_us)
-            ON CONFLICT(symbol) DO UPDATE
-            SET price=excluded.price,
-              last_updated_us=excluded.last_updated_us
-            """,
-            {
-                "symbol": symbol,
-                "price": price,
-                "last_updated_us": last_updated_us,
-            },
-        )
-        db.commit()
+    db.execute(
+        """INSERT INTO forex
+        (symbol, price, last_updated_us)
+        VALUES (:symbol, :price, :last_updated_us)
+        ON CONFLICT(symbol) DO UPDATE
+        SET price=excluded.price,
+            last_updated_us=excluded.last_updated_us
+        """,
+        {
+            "symbol": symbol,
+            "price": price,
+            "last_updated_us": now_us,
+        },
+    )
+    db.commit()
 
 
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
-    async with aiohttp.ClientSession() as session:
-        return await download_forex(max_age=max_age, session=session)
+    async with httpx.AsyncClient() as client:
+        return await download_forex(max_age=max_age, client=client)
 
 
 if __name__ == "__main__":
@@ -154,4 +175,3 @@ if __name__ == "__main__":
     asyncio.set_event_loop(loop)
     max_age = stockdice.timeutils.parse_timedelta(args.max_age)
     loop.run_until_complete(main(max_age=max_age))
-

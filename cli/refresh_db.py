@@ -17,8 +17,10 @@
 import argparse
 import asyncio
 import datetime
+import logging
+import sys
 
-import aiohttp
+import httpx
 
 import stockdice.company_profile
 import stockdice.forex
@@ -27,22 +29,34 @@ import stockdice.stocklist
 import stockdice.timeutils
 
 
+# TODO: Where should I be configuring logging?
+# https://stackoverflow.com/a/14058475/101923
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
 
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     # Pseudocode:
     # Download quote in a loop.
     # In a background thread, every 5 minutes or so, copy a backup to GCS
-    # When we're outside of trading hours, also download balance-sheet and income.
+    # Once per day (outside trading hours), also download balance-sheet and income.
 
-    async with aiohttp.ClientSession() as session:
-        await stockdice.stocklist.download_symbol_list(session=session)
+    async with httpx.AsyncClient() as client:
+        await stockdice.stocklist.download_symbol_list(client=client)
 
         await asyncio.gather(
-            stockdice.forex.download_forex(max_age=max_age, session=session),
-            stockdice.company_profile.download_all(max_age=max_age, session=session),
-            stockdice.income.download_all(max_age=max_age, session=session),
+            stockdice.forex.download_forex(max_age=max_age, client=client),
+            stockdice.company_profile.download_all(max_age=max_age, client=client),
+            stockdice.income.download_all(max_age=max_age, client=client),
             # download_values.main(command="balance-sheet", max_age=max_age),
         )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

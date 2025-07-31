@@ -30,11 +30,15 @@ class LocalConfig:
         self._db = None
         with open(REPO_ROOT / "environment.toml") as config_file:
             self._config = toml.load(config_file)
-    
+
     @property
     def fmp_api_key(self):
         return self._config["FMP_API_KEY"]
-    
+
+    @property
+    def requests_per_minute(self):
+        return self._config["requests_per_minute"]
+
     @property
     def db(self):
         if self._db is None:
@@ -55,7 +59,11 @@ class GoogleCloudConfig:
             # TODO: load from secrets manager
             pass
         return self._fmp_api_key
-    
+
+    @property
+    def requests_per_minute(self):
+        return 300
+
     @property
     def db(self):
         if self._db is None:
@@ -68,7 +76,9 @@ class GoogleCloudConfig:
 if (deployment := os.getenv("DEPLOYMENT", "LOCAL")) == "LOCAL":
     config = LocalConfig()
 elif deployment == "GOOGLE_CLOUD":
-    credentials, project_id = google.auth.default(["https://www.googleapis.com/auth/cloud-platform"])
+    credentials, project_id = google.auth.default(
+        ["https://www.googleapis.com/auth/cloud-platform"]
+    )
     authorized_session = google.auth.transport.requests.AuthorizedSession(credentials)
     config = GoogleCloudConfig(authorized_session, project_id)
 else:
@@ -77,3 +87,4 @@ else:
 
 DB = config.db
 FMP_API_KEY = config.fmp_api_key
+REQUESTS_PER_MINUTE = config.requests_per_minute

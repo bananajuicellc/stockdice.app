@@ -204,7 +204,8 @@ def create_company_profile(db, *, reset: bool):
 def is_fresh(*, table: str, symbol: str, max_last_updated_us: int) -> bool:
     db = stockdice.config.DB
     cursor = db.execute(
-        f"SELECT last_updated_us FROM {table} WHERE symbol = :symbol", {"symbol": symbol}
+        f"SELECT last_updated_us FROM {table} WHERE symbol = :symbol",
+        {"symbol": symbol},
     )
     previous_last_updated = cursor.fetchone()
     return (

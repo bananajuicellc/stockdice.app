@@ -16,9 +16,7 @@ import datetime
 import re
 
 
-TIMEDELTA_REGEX = re.compile(
-    r"^(?P<length>[0-9]+)(?P<units>w|d|h|s|ms|us)$"
-)
+TIMEDELTA_REGEX = re.compile(r"^(?P<length>[0-9]+)(?P<units>w|d|h|s|ms|us)$")
 TIMEDELTA_UNITS = {
     "w": "weeks",
     "d": "days",

@@ -26,9 +26,23 @@ def is_new_york_regular_trading_hours():
     # Monday is 0, ..., Saturday is 5, Sunday is 6.
     if now.weekday() > 4:
         return False
-    
-    start_time = datetime.datetime(now.year, now.month, now.day, NEW_YORK_START_TIME.hour, NEW_YORK_START_TIME.minute, tzinfo=NEW_YORK)
-    end_time = datetime.datetime(now.year, now.month, now.day, NEW_YORK_END_TIME.hour, NEW_YORK_END_TIME.minute, tzinfo=NEW_YORK)
+
+    start_time = datetime.datetime(
+        now.year,
+        now.month,
+        now.day,
+        NEW_YORK_START_TIME.hour,
+        NEW_YORK_START_TIME.minute,
+        tzinfo=NEW_YORK,
+    )
+    end_time = datetime.datetime(
+        now.year,
+        now.month,
+        now.day,
+        NEW_YORK_END_TIME.hour,
+        NEW_YORK_END_TIME.minute,
+        tzinfo=NEW_YORK,
+    )
 
     # TODO: Do we want to include logic for holidays?
     return start_time <= now <= end_time

@@ -21,7 +21,6 @@ import datetime
 import stockdice.timeutils
 
 
-
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
     # Pseudocode:
     # Download quote in a loop.
@@ -36,6 +35,7 @@ async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
         download_values.main(command="balance-sheet", max_age=max_age),
         download_values.main(command="income", max_age=max_age),
     )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

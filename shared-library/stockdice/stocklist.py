@@ -19,7 +19,8 @@ import asyncio
 import datetime
 import logging
 
-import aiohttp
+import httpx
+
 import stockdice.ratelimits
 import stockdice.config
 import stockdice.timeutils
@@ -31,31 +32,38 @@ FMP_FINANCIAL_STATEMENT_SYMBOL_LIST = "https://financialmodelingprep.com/stable/
 
 
 @stockdice.ratelimits.retry_fmp
-async def download_symbol_list(*, session):
+async def download_symbol_list(*, client: httpx.AsyncClient):
     db = stockdice.config.DB
-    url = FMP_FINANCIAL_STATEMENT_SYMBOL_LIST.format(apikey=stockdice.config.FMP_API_KEY)
+    url = FMP_FINANCIAL_STATEMENT_SYMBOL_LIST.format(
+        apikey=stockdice.config.FMP_API_KEY
+    )
     last_updated_us = stockdice.timeutils.now_in_microseconds()
 
-    async with session.get(url) as resp:
-        resp_json = await stockdice.ratelimits.check_status(resp)
+    resp = await stockdice.ratelimits.get(client, url)
+    resp_json = stockdice.ratelimits.check_status(resp)
 
-        db.executemany(
-            f"""INSERT INTO symbol
-            (symbol, company_name, trading_currency, reporting_currency, last_updated_us)
-            VALUES (:symbol, :companyName, :tradingCurrency, :reportingCurrency, {last_updated_us})
-            ON CONFLICT(symbol) DO UPDATE
-            SET company_name=excluded.company_name,
-            trading_currency = excluded.trading_currency,
-            reporting_currency = excluded.trading_currency,
-            last_updated_us = excluded.last_updated_us;
-            """,
-            resp_json,
-        )
-        db.execute(f"DELETE FROM symbol WHERE last_updated_us <> {last_updated_us};")
-        db.commit()
+    db.executemany(
+        f"""INSERT INTO symbol
+        (symbol, company_name, trading_currency, reporting_currency, last_updated_us)
+        VALUES (:symbol, :companyName, :tradingCurrency, :reportingCurrency, {last_updated_us})
+        ON CONFLICT(symbol) DO UPDATE
+        SET company_name=excluded.company_name,
+        trading_currency = excluded.trading_currency,
+        reporting_currency = excluded.trading_currency,
+        last_updated_us = excluded.last_updated_us;
+        """,
+        resp_json,
+    )
+    db.execute(f"DELETE FROM symbol WHERE last_updated_us <> {last_updated_us};")
+    db.commit()
 
 
 def list_symbols():
     db = stockdice.config.DB
     # TODO: support global stocks.
-    return [row[0] for row in db.execute("SELECT symbol FROM symbol WHERE trading_currency = 'USD';")]
+    return [
+        row[0]
+        for row in db.execute(
+            "SELECT symbol FROM symbol WHERE trading_currency = 'USD';"
+        )
+    ]

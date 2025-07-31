@@ -19,15 +19,17 @@ import random
 import time
 from typing import Iterable
 
-import aiohttp
+import httpx
 
+import stockdice.config
 import stockdice.db
 
 
 # Rate limit from our side. We only want to download BATCH_SIZE records per
 # BATCH_WAIT seconds. At 300 API calls / minute, we can do at most 5 per second.
-BATCH_SIZE = 5
-BATCH_WAIT = 1
+SECONDS_BETWEEN_REQUESTS = 60.0 / stockdice.config.REQUESTS_PER_MINUTE
+last_request_time = None
+request_lock = asyncio.Lock()
 
 # Rate limit from server side. This is especially useful when we're downloading
 # from several APIs at once.
@@ -42,10 +44,27 @@ class RateLimitError(Exception):
         self.millis = millis
 
 
-async def check_status(resp):
-    if resp.status == RATE_LIMIT_STATUS:
+async def get(client: httpx.AsyncClient, url: str):
+    global last_request_time
+
+    async with request_lock:
+        current_time = time.monotonic()
+        if last_request_time is None:
+            time_since_last = float("inf")
+        else:
+            time_since_last = current_time - last_request_time
+
+        if time_since_last < SECONDS_BETWEEN_REQUESTS:
+            await asyncio.sleep(SECONDS_BETWEEN_REQUESTS - time_since_last)
+
+        last_request_time = current_time
+        return await client.get(url)
+
+
+def check_status(resp):
+    if resp.status_code == RATE_LIMIT_STATUS:
         raise RateLimitError(1, 0)
-    resp_json = await resp.json()
+    resp_json = resp.json()
     if RATE_LIMIT_SECONDS in resp_json or RATE_LIMIT_MILLISECONDS in resp_json:
         raise RateLimitError(
             float(resp_json.get(RATE_LIMIT_SECONDS, 0)),
@@ -70,40 +89,3 @@ def retry_fmp(async_fn):
                 return value
 
     return wrapped
-
-
-async def download_all(
-    download_fn,
-    *,
-    table: str,
-    max_age: datetime.timedelta = datetime.timedelta(days=1),
-    all_symbols: Iterable[str],
-):
-    epoch = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
-    now = datetime.datetime.now(datetime.timezone.utc)
-    last_updated_us = (now - epoch) / datetime.timedelta(microseconds=1)
-
-    # The oldest we'll allow a value to be before we have to refresh it.
-    max_last_updated_us = ((now - max_age) - epoch) / datetime.timedelta(microseconds=1)
-
-    async with aiohttp.ClientSession() as session:
-        batch_index = 0
-        batch_start = time.monotonic()
-        for symbol in all_symbols:
-            if stockdice.db.is_fresh(table=table, symbol=symbol, max_last_updated_us=max_last_updated_us):
-                continue
-
-            # Rate limit! We only want to download BATCH_SIZE records per
-            # BATCH_WAIT seconds.
-            if batch_index >= BATCH_SIZE:
-                batch_time = time.monotonic() - batch_start
-                remaining = BATCH_WAIT - batch_time
-                if remaining > 0:
-                    await asyncio.sleep(remaining)
-                batch_start = time.monotonic()
-                batch_index = 0
-            await download_fn(
-                session=session,
-                symbol=symbol,
-                last_updated_us=last_updated_us,
-            )
