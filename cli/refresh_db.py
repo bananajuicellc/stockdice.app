@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Command to refresh the database (1 time)."""
+
 import argparse
 import asyncio
 import datetime
@@ -22,6 +24,7 @@ import sys
 
 import httpx
 
+import stockdice.balance_sheet
 import stockdice.company_profile
 import stockdice.forex
 import stockdice.income
@@ -42,11 +45,6 @@ root.addHandler(handler)
 
 
 async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
-    # Pseudocode:
-    # Download quote in a loop.
-    # In a background thread, every 5 minutes or so, copy a backup to GCS
-    # Once per day (outside trading hours), also download balance-sheet and income.
-
     async with httpx.AsyncClient() as client:
         await stockdice.stocklist.download_symbol_list(client=client)
 
@@ -54,7 +52,7 @@ async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
             stockdice.forex.download_forex(max_age=max_age, client=client),
             stockdice.company_profile.download_all(max_age=max_age, client=client),
             stockdice.income.download_all(max_age=max_age, client=client),
-            # download_values.main(command="balance-sheet", max_age=max_age),
+            stockdice.balance_sheet.download_all(max_age=max_age, client=client),
         )
 
 

@@ -35,20 +35,81 @@ def create_all_tables(db, *, reset: bool):
 
 def create_balance_sheet(db, *, reset: bool):
     if reset:
-        db.execute("DROP TABLE IF EXISTS balance_sheets;")
-    elif _table_exists(db, "balance_sheets"):
-        logging.warning("balance_sheets already exists, skipping")
+        db.execute("DROP TABLE IF EXISTS balance_sheet;")
+    elif _table_exists(db, "balance_sheet"):
+        logging.warning("balance_sheet already exists, skipping")
         return
-
-    db.execute("""
-    CREATE TABLE balance_sheets(
-    symbol STRING PRIMARY KEY,
-    book REAL,
-    currency STRING,
-    last_updated_us INTEGER
-    );
-    """)
+    
+    db.execute(
+        """
+        CREATE TABLE balance_sheet (
+            "date" TEXT,
+            "symbol" TEXT NOT NULL,
+            "reportedCurrency" TEXT,
+            "cik" TEXT NOT NULL,
+            "filingDate" TEXT,
+            "acceptedDate" TEXT,
+            "fiscalYear" INTEGER NOT NULL,
+            "period" TEXT NOT NULL,
+            "cashAndCashEquivalents" INTEGER,
+            "shortTermInvestments" INTEGER,
+            "cashAndShortTermInvestments" INTEGER,
+            "netReceivables" INTEGER,
+            "accountsReceivables" INTEGER,
+            "otherReceivables" INTEGER,
+            "inventory" INTEGER,
+            "prepaids" INTEGER,
+            "otherCurrentAssets" INTEGER,
+            "totalCurrentAssets" INTEGER,
+            "propertyPlantEquipmentNet" INTEGER,
+            "goodwill" INTEGER,
+            "intangibleAssets" INTEGER,
+            "goodwillAndIntangibleAssets" INTEGER,
+            "longTermInvestments" INTEGER,
+            "taxAssets" INTEGER,
+            "otherNonCurrentAssets" INTEGER,
+            "totalNonCurrentAssets" INTEGER,
+            "otherAssets" INTEGER,
+            "totalAssets" INTEGER,
+            "totalPayables" INTEGER,
+            "accountPayables" INTEGER,
+            "otherPayables" INTEGER,
+            "accruedExpenses" INTEGER,
+            "shortTermDebt" INTEGER,
+            "capitalLeaseObligationsCurrent" INTEGER,
+            "taxPayables" INTEGER,
+            "deferredRevenue" INTEGER,
+            "otherCurrentLiabilities" INTEGER,
+            "totalCurrentLiabilities" INTEGER,
+            "longTermDebt" INTEGER,
+            "deferredRevenueNonCurrent" INTEGER,
+            "deferredTaxLiabilitiesNonCurrent" INTEGER,
+            "otherNonCurrentLiabilities" INTEGER,
+            "totalNonCurrentLiabilities" INTEGER,
+            "otherLiabilities" INTEGER,
+            "capitalLeaseObligations" INTEGER,
+            "totalLiabilities" INTEGER,
+            "treasuryStock" INTEGER,
+            "preferredStock" INTEGER,
+            "commonStock" INTEGER,
+            "retainedEarnings" INTEGER,
+            "additionalPaidInCapital" INTEGER,
+            "accumulatedOtherComprehensiveIncomeLoss" INTEGER,
+            "otherTotalStockholdersEquity" INTEGER,
+            "totalStockholdersEquity" INTEGER,
+            "totalEquity" INTEGER,
+            "minorityInterest" INTEGER,
+            "totalLiabilitiesAndTotalEquity" INTEGER,
+            "totalInvestments" INTEGER,
+            "totalDebt" INTEGER,
+            "netDebt" INTEGER,
+            last_updated_us INTEGER,
+            PRIMARY KEY ("symbol", "fiscalYear", "period")
+        );
+        """
+    )
     db.commit()
+
 
 
 def create_forex(db, *, reset: bool):

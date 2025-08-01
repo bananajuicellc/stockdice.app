@@ -23,7 +23,12 @@ async def download_company_profile(
     db = stockdice.config.DB
     now_us = stockdice.timeutils.now_in_microseconds()
     last_updated = db.execute(
-        "SELECT last_updated_us FROM company_profile WHERE symbol = :symbol",
+        """
+        SELECT last_updated_us
+        FROM company_profile
+        WHERE symbol = :symbol
+        ORDER BY last_updated_us DESC
+        """,
         {"symbol": symbol},
     ).fetchone()
     if (

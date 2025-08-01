@@ -13,16 +13,13 @@
 # limitations under the License.
 
 import asyncio
-import datetime
 import functools
 import random
 import time
-from typing import Iterable
 
 import httpx
 
 import stockdice.config
-import stockdice.db
 
 
 # Rate limit from our side. We only want to download BATCH_SIZE records per
@@ -83,6 +80,9 @@ def retry_fmp(async_fn):
                 sleep_seconds = exp.seconds + (exp.millis / 1000.0)
                 jitter = random.randint(0, int(sleep_seconds) + 1)
                 await asyncio.sleep(sleep_seconds + jitter)
+            except httpx.ReadTimeout:
+                # Try again.
+                pass
             except:
                 raise
             else:

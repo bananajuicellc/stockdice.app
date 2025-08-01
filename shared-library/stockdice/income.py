@@ -21,7 +21,13 @@ async def download_income(
     db = stockdice.config.DB
     now_us = stockdice.timeutils.now_in_microseconds()
     last_updated = db.execute(
-        "SELECT last_updated_us FROM income WHERE symbol = :symbol", {"symbol": symbol}
+        """
+        SELECT last_updated_us
+        FROM income
+        WHERE symbol = :symbol
+        ORDER BY last_updated_us DESC
+        """,
+        {"symbol": symbol}
     ).fetchone()
     if (
         last_updated
