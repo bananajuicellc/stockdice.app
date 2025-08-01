@@ -125,13 +125,12 @@ async def download_income(
             :weightedAverageShsOutDil,
             {now_us}
         )
-        ON CONFLICT (symbol, date) DO UPDATE SET
+        ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
             reportedCurrency = EXCLUDED.reportedCurrency,
             cik = EXCLUDED.cik,
+            date = EXCLUDED.date,
             filingDate = EXCLUDED.filingDate,
             acceptedDate = EXCLUDED.acceptedDate,
-            fiscalYear = EXCLUDED.fiscalYear,
-            period = EXCLUDED.period,
             revenue = EXCLUDED.revenue,
             costOfRevenue = EXCLUDED.costOfRevenue,
             grossProfit = EXCLUDED.grossProfit,

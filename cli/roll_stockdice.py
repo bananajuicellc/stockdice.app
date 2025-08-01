@@ -14,32 +14,127 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import argparse
+import dataclasses
 import io
 
 import numpy
 import pandas
 
-import helpers
+import stockdice.config
 
 
-def load_dfs():
-    all_symbols = pandas.read_csv(
-        helpers.NASDAQ_DIR / "allsymbols.txt", header=None, names=["symbol"]
+@dataclasses.dataclass
+class Tables:
+    balance_sheet: pandas.DataFrame
+    company_profile: pandas.DataFrame
+    income: pandas.DataFrame
+    forex: pandas.DataFrame
+    symbols: pandas.DataFrame
+
+
+def load_dfs() -> Tables:
+    balance_sheet = pandas.read_sql(
+        """
+        SELECT
+            symbol,
+            fiscalYear,
+            period,
+            date,
+            reportedCurrency,
+            totalAssets,
+            totalLiabilities,
+            last_updated_us
+        FROM (
+            SELECT
+                symbol,
+                fiscalYear,
+                period,
+                date,
+                reportedCurrency,
+                totalAssets,
+                totalLiabilities,
+                last_updated_us,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY fiscalYear DESC
+                ) as rn
+            FROM
+                balance_sheet
+            WHERE
+                -- TODO: how to handle quarterly reports?
+                period = 'FY'
+        )
+        WHERE
+            rn = 1;
+        """,
+        stockdice.config.DB,
     )
-    quote = pandas.read_sql(
-        "SELECT symbol, market_cap_usd AS market_cap FROM quotes ORDER BY symbol ASC",
-        helpers.DB,
+    company_profile = pandas.read_sql(
+        """
+        SELECT symbol, price, marketCap, currency
+        FROM company_profile
+        WHERE isEtf = false
+        AND isFund = false;
+        """,
+        stockdice.config.DB,
+    )
+    forex = pandas.read_sql(
+        """
+        SELECT symbol, from_currency, to_currency, price
+        FROM forex;
+        """,
+        stockdice.config.DB,
     )
     income = pandas.read_sql(
-        "SELECT symbol, profit, revenue, currency FROM incomes ORDER BY symbol ASC",
-        helpers.DB,
+        """
+        SELECT
+            symbol,
+            fiscalYear,
+            period,
+            date,
+            reportedCurrency,
+            revenue,
+            netIncome,
+            last_updated_us
+        FROM (
+            SELECT
+                symbol,
+                fiscalYear,
+                period,
+                date,
+                reportedCurrency,
+                revenue,
+                netIncome,
+                last_updated_us,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY fiscalYear DESC
+                ) as rn
+            FROM
+                income
+            WHERE
+                -- TODO: how to handle quarterly reports?
+                period = 'FY'
+        )
+        WHERE
+            rn = 1;
+        """,
+        stockdice.config.DB,
     )
-    balance_sheet = pandas.read_sql(
-        "SELECT symbol, book, currency FROM balance_sheets ORDER BY symbol ASC",
-        helpers.DB,
+    symbols = pandas.read_sql(
+        "SELECT symbol, company_name FROM symbol;",
+        stockdice.config.DB,
     )
-    return all_symbols, quote, income, balance_sheet
+    return Tables(
+        balance_sheet=balance_sheet,
+        company_profile=company_profile,
+        income=income,
+        forex=forex,
+        symbols=symbols,
+    )
 
 
 def add_usd_column_from_forex(df, column):

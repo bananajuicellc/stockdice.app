@@ -140,7 +140,6 @@ def create_income(db, *, reset: bool):
         logging.warning("income already exists, skipping")
         return
 
-    db.execute("DROP TABLE IF EXISTS incomes;")
     db.execute(
         """
         CREATE TABLE income (
@@ -184,7 +183,7 @@ def create_income(db, *, reset: bool):
             weightedAverageShsOut INTEGER,
             weightedAverageShsOutDil INTEGER,
             last_updated_us INTEGER,
-            PRIMARY KEY (date, symbol)
+            PRIMARY KEY (symbol, fiscalYear, period)
         );
         """
     )
