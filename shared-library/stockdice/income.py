@@ -27,7 +27,7 @@ async def download_income(
         WHERE symbol = :symbol
         ORDER BY last_updated_us DESC
         """,
-        {"symbol": symbol}
+        {"symbol": symbol},
     ).fetchone()
     if (
         last_updated

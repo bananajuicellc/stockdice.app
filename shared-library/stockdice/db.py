@@ -39,7 +39,7 @@ def create_balance_sheet(db, *, reset: bool):
     elif _table_exists(db, "balance_sheet"):
         logging.warning("balance_sheet already exists, skipping")
         return
-    
+
     db.execute(
         """
         CREATE TABLE balance_sheet (
@@ -109,7 +109,6 @@ def create_balance_sheet(db, *, reset: bool):
         """
     )
     db.commit()
-
 
 
 def create_forex(db, *, reset: bool):

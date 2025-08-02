@@ -35,6 +35,7 @@ request_lock = asyncio.Lock()
 RATE_LIMIT_STATUS = 429
 RATE_LIMIT_SECONDS = "X-Rate-Limit-Retry-After-Seconds"
 RATE_LIMIT_MILLISECONDS = "X-Rate-Limit-Retry-After-Milliseconds"
+RATE_LIMIT_MINIMUM_SECONDS = 10.0
 
 
 class RateLimitError(Exception):
@@ -80,16 +81,20 @@ def retry_fmp(async_fn):
             try:
                 value = await async_fn(*args, **kwargs)
             except RateLimitError as exp:
-                # Add a minimum of 1 second since it never seems to report
-                # enough time in the exception.
-                jitter = 1.0 + random.random()
+                jitter = random.random()
                 sleep_seconds = exp.seconds + (exp.millis / 1000.0)
+
+                # Add a minimum wait time, since FMP never seems to report
+                # enough time in the exception.
+                actual_sleep_seconds = (
+                    max(RATE_LIMIT_MINIMUM_SECONDS, sleep_seconds) + jitter
+                )
                 logging.info(
                     f"Exception reported a minimum wait time of {sleep_seconds} seconds. "
-                    f"Waiting {sleep_seconds + jitter} seconds."
+                    f"Waiting {actual_sleep_seconds} seconds."
                 )
                 current_time = time.monotonic()
-                next_request_time_local = current_time + sleep_seconds + jitter
+                next_request_time_local = current_time + actual_sleep_seconds
 
                 async with next_request_time_lock:
                     # Don't accidentally decrease the time to the next request.

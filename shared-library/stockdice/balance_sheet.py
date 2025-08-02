@@ -12,9 +12,7 @@ import stockdice.stocklist
 
 # https://site.financialmodelingprep.com/developer/docs/stable/balance-sheet-statement
 # https://www.investopedia.com/terms/b/balancesheet.asp
-FMP_BALANCE_SHEET = (
-    "https://financialmodelingprep.com/stable/balance-sheet-statement?symbol={symbol}&apikey={apikey}"
-)
+FMP_BALANCE_SHEET = "https://financialmodelingprep.com/stable/balance-sheet-statement?symbol={symbol}&apikey={apikey}"
 
 
 @stockdice.ratelimits.retry_fmp
