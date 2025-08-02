@@ -41,6 +41,18 @@ async def download_balance_sheet(
     
     if stockdice.company_profile.is_fund_or_etf(symbol):
         logging.debug(f"{symbol} is a fund or ETF, skipping.")
+        db.execute(
+            f"""
+            INSERT INTO balance_sheet (
+                "symbol", "fiscalYear", "period", "last_updated_us"
+            ) VALUES (
+                :symbol, :fiscalYear, :period, :last_updated_us
+            ) ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
+                "last_updated_us" = excluded."last_updated_us";
+            """,
+            {"symbol": symbol, "fiscalYear": None, "period": None, "last_updated_us": now_us},
+        )
+        db.commit()
         return
 
     url = FMP_BALANCE_SHEET.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)

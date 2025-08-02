@@ -12,18 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import pathlib
 import sqlite3
 
-import google.auth
-import google.auth.transport.requests
 import toml
 
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent.parent
 FMP_DIR = REPO_ROOT / "third_party" / "financialmodelingprep.com"
-
+DB_PATH = FMP_DIR / "stockdice.sqlite"
+DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 
 class LocalConfig:
     def __init__(self):
@@ -46,45 +44,7 @@ class LocalConfig:
         return self._db
 
 
-class GoogleCloudConfig:
-    def __init__(self, authorized_session, project_id: str):
-        self._authorized_session = authorized_session
-        self._project_id = project_id
-        self._fmp_api_key = None
-        self._db = None
-
-    @property
-    def fmp_api_key(self):
-        if self._fmp_api_key is None:
-            # TODO: load from secrets manager
-            pass
-        return self._fmp_api_key
-
-    @property
-    def requests_per_minute(self):
-        return 300
-
-    @property
-    def db(self):
-        if self._db is None:
-            # TODO: load from GCS
-            # TODO: do I need to disambiguate read-only replica from read-write?
-            pass
-        return self._db
-
-
-if (deployment := os.getenv("DEPLOYMENT", "LOCAL")) == "LOCAL":
-    config = LocalConfig()
-elif deployment == "GOOGLE_CLOUD":
-    credentials, project_id = google.auth.default(
-        ["https://www.googleapis.com/auth/cloud-platform"]
-    )
-    authorized_session = google.auth.transport.requests.AuthorizedSession(credentials)
-    config = GoogleCloudConfig(authorized_session, project_id)
-else:
-    raise ValueError(f"Got unexpected DEPLOYMENT: {deployment}")
-
-
+config = LocalConfig()
 DB = config.db
 FMP_API_KEY = config.fmp_api_key
 REQUESTS_PER_MINUTE = config.requests_per_minute

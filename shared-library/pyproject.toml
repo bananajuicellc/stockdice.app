@@ -5,9 +5,9 @@ description = "A random stock picker working with FMP API"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "google-auth>=2.40.3",
+    "adbc-driver-sqlite>=1.7.0",
     "httpx>=0.28.1",
-    "pandas>=2.3.1",
-    "requests>=2.32.4",
+    "numpy>=2.3.2",
+    "pyarrow>=21.0.0",
     "toml>=0.10.2",
 ]

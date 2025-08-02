@@ -131,6 +131,16 @@ def create_forex(db, *, reset: bool):
     """)
     db.commit()
 
+    # Make it easier to convert currency to USD by a join on the forex table.
+    db.execute(
+        """
+        INSERT INTO forex(symbol, from_currency, to_currency, from_name, to_name, price)
+        VALUES(
+            'USDUSD', 'USD', 'USD', 'U.S. Dollar', 'U.S. Dollar', 1.0
+        )
+        """)
+    db.commit()
+
 
 def create_income(db, *, reset: bool):
     if reset:
