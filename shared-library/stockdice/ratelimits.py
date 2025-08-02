@@ -25,7 +25,7 @@ import stockdice.config
 # Rate limit from our side. We only want to download BATCH_SIZE records per
 # BATCH_WAIT seconds. At 300 API calls / minute, we can do at most 5 per second.
 SECONDS_BETWEEN_REQUESTS = 60.0 / stockdice.config.REQUESTS_PER_MINUTE
-last_request_time = None
+next_request_time = time.monotonic()
 request_lock = asyncio.Lock()
 
 # Rate limit from server side. This is especially useful when we're downloading
@@ -42,19 +42,14 @@ class RateLimitError(Exception):
 
 
 async def get(client: httpx.AsyncClient, url: str):
-    global last_request_time
+    global next_request_time
 
     async with request_lock:
         current_time = time.monotonic()
-        if last_request_time is None:
-            time_since_last = float("inf")
-        else:
-            time_since_last = current_time - last_request_time
+        if current_time < next_request_time:
+            await asyncio.sleep(next_request_time - current_time)
 
-        if time_since_last < SECONDS_BETWEEN_REQUESTS:
-            await asyncio.sleep(SECONDS_BETWEEN_REQUESTS - time_since_last)
-
-        last_request_time = current_time
+        next_request_time = current_time + SECONDS_BETWEEN_REQUESTS
         return await client.get(url)
 
 
@@ -73,13 +68,17 @@ def check_status(resp):
 def retry_fmp(async_fn):
     @functools.wraps(async_fn)
     async def wrapped(*args, **kwargs):
+        global next_request_time
+
         while True:
             try:
                 value = await async_fn(*args, **kwargs)
             except RateLimitError as exp:
                 sleep_seconds = exp.seconds + (exp.millis / 1000.0)
-                jitter = random.randint(0, int(sleep_seconds) + 1)
-                await asyncio.sleep(sleep_seconds + jitter)
+                jitter = random.random()
+                current_time = time.monotonic()
+                # Should be OK without a lock because variable assignment is atomic in Python.
+                next_request_time = current_time + sleep_seconds + jitter
             except httpx.ReadTimeout:
                 # Try again.
                 pass
