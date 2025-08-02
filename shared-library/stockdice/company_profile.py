@@ -16,6 +16,27 @@ FMP_COMPANY_PROFILE = (
 )
 
 
+def is_fund_or_etf(symbol: str):
+    db = stockdice.config.DB
+    row = db.execute(
+        """
+        SELECT isEtf, isFund
+        FROM company_profile
+        WHERE symbol = :symbol
+        ORDER BY last_updated_us DESC
+        LIMIT 1;
+        """,
+        {"symbol": symbol},
+    ).fetchone()
+
+    if not row:
+        # Don't know, so don't skip.
+        return False
+
+    is_etf, is_fund = row
+    return is_etf or is_fund
+
+
 @stockdice.ratelimits.retry_fmp
 async def download_company_profile(
     *, client: httpx.AsyncClient, symbol: str, max_age: datetime.timedelta
@@ -28,6 +49,7 @@ async def download_company_profile(
         FROM company_profile
         WHERE symbol = :symbol
         ORDER BY last_updated_us DESC
+        LIMIT 1;
         """,
         {"symbol": symbol},
     ).fetchone()
@@ -37,10 +59,32 @@ async def download_company_profile(
     ):
         logging.debug(f"Data already fresh, skipping company_profile for {symbol}.")
         return
+    
+    if is_fund_or_etf(symbol):
+        logging.debug(f"{symbol} is a fund or ETF, skipping.")
+        return
 
     url = FMP_COMPANY_PROFILE.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)
     resp = await stockdice.ratelimits.get(client, url)
     resp_json = stockdice.ratelimits.check_status(resp)
+
+    # Empty, but successfull response means we don't have the data available, so
+    # let's skip it for now.
+    if not resp_json:
+        logging.info(f"No company_profile data available for {symbol}.")
+        db.execute(
+            f"""
+            INSERT INTO company_profile (
+                "symbol", "last_updated_us"
+            ) VALUES (
+                :symbol, :last_updated_us
+            ) ON CONFLICT (symbol) DO UPDATE SET
+                "last_updated_us" = excluded."last_updated_us";
+            """,
+            {"symbol": symbol, "last_updated_us": now_us},
+        )
+        db.commit()
+        return
 
     db.executemany(
         f"""

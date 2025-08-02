@@ -6,6 +6,7 @@ import logging
 
 import httpx
 
+import stockdice.company_profile
 import stockdice.ratelimits
 import stockdice.timeutils
 import stockdice.stocklist
@@ -26,6 +27,7 @@ async def download_income(
         FROM income
         WHERE symbol = :symbol
         ORDER BY last_updated_us DESC
+        LIMIT 1;
         """,
         {"symbol": symbol},
     ).fetchone()
@@ -35,10 +37,32 @@ async def download_income(
     ):
         logging.debug(f"Data already fresh, skipping company_profile for {symbol}.")
         return
+    
+    if stockdice.company_profile.is_fund_or_etf(symbol):
+        logging.debug(f"{symbol} is a fund or ETF, skipping.")
+        return
 
     url = FMP_INCOME.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)
     resp = await stockdice.ratelimits.get(client, url)
     resp_json = stockdice.ratelimits.check_status(resp)
+
+    # Empty, but successfull response means we don't have the data available, so
+    # let's skip it for now.
+    if not resp_json:
+        logging.info(f"No balance_sheet data available for {symbol}.")
+        db.execute(
+            f"""
+            INSERT INTO balance_sheet (
+                "symbol", "fiscalYear", "period", "last_updated_us"
+            ) VALUES (
+                :symbol, :fiscalYear, :period, :last_updated_us
+            ) ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
+                "last_updated_us" = excluded."last_updated_us";
+            """,
+            {"symbol": symbol, "fiscalYear": None, "period": None, "last_updated_us": now_us},
+        )
+        db.commit()
+        return
 
     db.executemany(
         f"""
