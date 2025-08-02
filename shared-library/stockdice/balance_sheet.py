@@ -34,7 +34,7 @@ async def download_balance_sheet(
         last_updated
         and datetime.timedelta(microseconds=now_us - last_updated[0]) <= max_age
     ):
-        logging.info(f"Data already fresh, skipping balance_sheet for {symbol}.")
+        logging.debug(f"Data already fresh, skipping balance_sheet for {symbol}.")
         return
 
     url = FMP_BALANCE_SHEET.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)

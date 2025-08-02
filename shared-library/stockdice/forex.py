@@ -131,7 +131,7 @@ async def download_forex_quote(
         last_updated
         and datetime.timedelta(microseconds=now_us - last_updated[0]) <= max_age
     ):
-        logging.info(f"Data already fresh, skipping forex for {symbol}.")
+        logging.debug(f"Data already fresh, skipping forex for {symbol}.")
         return
 
     url = FMP_FOREX_QUOTE.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)

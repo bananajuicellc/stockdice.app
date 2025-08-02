@@ -33,7 +33,7 @@ async def download_income(
         last_updated
         and datetime.timedelta(microseconds=now_us - last_updated[0]) <= max_age
     ):
-        logging.info(f"Data already fresh, skipping company_profile for {symbol}.")
+        logging.debug(f"Data already fresh, skipping company_profile for {symbol}.")
         return
 
     url = FMP_INCOME.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)
