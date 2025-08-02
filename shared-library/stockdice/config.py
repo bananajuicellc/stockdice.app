@@ -23,6 +23,7 @@ FMP_DIR = REPO_ROOT / "third_party" / "financialmodelingprep.com"
 DB_PATH = FMP_DIR / "stockdice.sqlite"
 DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 
+
 class LocalConfig:
     def __init__(self):
         self._db = None

@@ -34,21 +34,20 @@ def _load_dfs() -> _Tables:
     # TODO: we might be able to use read_database_uri if we're more careful
     # about what types we store in each column.
     connection = sqlite3.connect(stockdice.config.DB_REPLICA_PATH.absolute())
-    company_profile_query = (
-        """
+    company_profile_query = """
         SELECT *
         FROM company_profile
         WHERE isEtf = false
         AND isFund = false;
         """
+    company_profile = polars.read_database(
+        query=company_profile_query, connection=connection
     )
-    company_profile = polars.read_database(query=company_profile_query, connection=connection)
     forex = polars.read_database(
         query="SELECT * FROM forex WHERE to_currency = 'USD';",
         connection=connection,
     )
-    balance_sheet_query = (
-        """
+    balance_sheet_query = """
         SELECT
             symbol,
             fiscalYear,
@@ -81,10 +80,10 @@ def _load_dfs() -> _Tables:
         WHERE
             rn = 1;
         """
+    most_recent_fy_balance_sheet = polars.read_database(
+        query=balance_sheet_query, connection=connection
     )
-    most_recent_fy_balance_sheet = polars.read_database(query=balance_sheet_query, connection=connection)
-    income_query = (
-        """
+    income_query = """
         SELECT
             symbol,
             fiscalYear,
@@ -117,8 +116,9 @@ def _load_dfs() -> _Tables:
         WHERE
             rn = 1;
         """
+    most_recent_fy_income = polars.read_database(
+        query=income_query, connection=connection
     )
-    most_recent_fy_income = polars.read_database(query=income_query, connection=connection)
     return _Tables(
         company_profile=company_profile,
         forex=forex,
@@ -138,6 +138,5 @@ def roll():
         # marketCap=polars.col("marketCap"),
     )
     # TODO: support more than just market cap weighted.
-    
-    return company_profile_usd  #.filter(polars.col("marketCapUSD") < (polars.col("marketCap")))
 
+    return company_profile_usd  # .filter(polars.col("marketCapUSD") < (polars.col("marketCap")))

@@ -35,11 +35,28 @@ async def download_income(
         last_updated
         and datetime.timedelta(microseconds=now_us - last_updated[0]) <= max_age
     ):
-        logging.debug(f"Data already fresh, skipping company_profile for {symbol}.")
+        logging.debug(f"Data already fresh, skipping income for {symbol}.")
         return
-    
+
     if stockdice.company_profile.is_fund_or_etf(symbol):
         logging.debug(f"{symbol} is a fund or ETF, skipping.")
+        db.execute(
+            f"""
+            INSERT INTO income (
+                "symbol", "fiscalYear", "period", "last_updated_us"
+            ) VALUES (
+                :symbol, :fiscalYear, :period, :last_updated_us
+            ) ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
+                "last_updated_us" = excluded."last_updated_us";
+            """,
+            {
+                "symbol": symbol,
+                "fiscalYear": None,
+                "period": None,
+                "last_updated_us": now_us,
+            },
+        )
+        db.commit()
         return
 
     url = FMP_INCOME.format(symbol=symbol, apikey=stockdice.config.FMP_API_KEY)
@@ -49,17 +66,22 @@ async def download_income(
     # Empty, but successfull response means we don't have the data available, so
     # let's skip it for now.
     if not resp_json:
-        logging.info(f"No balance_sheet data available for {symbol}.")
+        logging.info(f"No income data available for {symbol}.")
         db.execute(
             f"""
-            INSERT INTO balance_sheet (
+            INSERT INTO income (
                 "symbol", "fiscalYear", "period", "last_updated_us"
             ) VALUES (
                 :symbol, :fiscalYear, :period, :last_updated_us
             ) ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
                 "last_updated_us" = excluded."last_updated_us";
             """,
-            {"symbol": symbol, "fiscalYear": None, "period": None, "last_updated_us": now_us},
+            {
+                "symbol": symbol,
+                "fiscalYear": None,
+                "period": None,
+                "last_updated_us": now_us,
+            },
         )
         db.commit()
         return

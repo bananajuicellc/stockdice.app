@@ -38,7 +38,7 @@ async def download_balance_sheet(
     ):
         logging.debug(f"Data already fresh, skipping balance_sheet for {symbol}.")
         return
-    
+
     if stockdice.company_profile.is_fund_or_etf(symbol):
         logging.debug(f"{symbol} is a fund or ETF, skipping.")
         db.execute(
@@ -50,7 +50,12 @@ async def download_balance_sheet(
             ) ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
                 "last_updated_us" = excluded."last_updated_us";
             """,
-            {"symbol": symbol, "fiscalYear": None, "period": None, "last_updated_us": now_us},
+            {
+                "symbol": symbol,
+                "fiscalYear": None,
+                "period": None,
+                "last_updated_us": now_us,
+            },
         )
         db.commit()
         return
@@ -72,7 +77,12 @@ async def download_balance_sheet(
             ) ON CONFLICT (symbol, fiscalYear, period) DO UPDATE SET
                 "last_updated_us" = excluded."last_updated_us";
             """,
-            {"symbol": symbol, "fiscalYear": None, "period": None, "last_updated_us": now_us},
+            {
+                "symbol": symbol,
+                "fiscalYear": None,
+                "period": None,
+                "last_updated_us": now_us,
+            },
         )
         db.commit()
         return

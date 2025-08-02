@@ -59,7 +59,7 @@ async def download_company_profile(
     ):
         logging.debug(f"Data already fresh, skipping company_profile for {symbol}.")
         return
-    
+
     if is_fund_or_etf(symbol):
         logging.debug(f"{symbol} is a fund or ETF, skipping.")
         return

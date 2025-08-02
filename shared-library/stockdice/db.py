@@ -138,7 +138,8 @@ def create_forex(db, *, reset: bool):
         VALUES(
             'USDUSD', 'USD', 'USD', 'U.S. Dollar', 'U.S. Dollar', 1.0
         )
-        """)
+        """
+    )
     db.commit()
 
 
