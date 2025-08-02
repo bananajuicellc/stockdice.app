@@ -14,6 +14,7 @@
 
 import asyncio
 import functools
+import logging
 import random
 import time
 
@@ -26,6 +27,7 @@ import stockdice.config
 # BATCH_WAIT seconds. At 300 API calls / minute, we can do at most 5 per second.
 SECONDS_BETWEEN_REQUESTS = 60.0 / stockdice.config.REQUESTS_PER_MINUTE
 next_request_time = time.monotonic()
+next_request_time_lock = asyncio.Lock()
 request_lock = asyncio.Lock()
 
 # Rate limit from server side. This is especially useful when we're downloading
@@ -46,6 +48,10 @@ async def get(client: httpx.AsyncClient, url: str):
 
     async with request_lock:
         current_time = time.monotonic()
+
+        # OK without the lock because getting a variable is atomic and if it
+        # changes between the check and the sleep, it would only to be to
+        # increase in value.
         if current_time < next_request_time:
             await asyncio.sleep(next_request_time - current_time)
 
@@ -74,11 +80,21 @@ def retry_fmp(async_fn):
             try:
                 value = await async_fn(*args, **kwargs)
             except RateLimitError as exp:
+                # Add a minimum of 1 second since it never seems to report
+                # enough time in the exception.
+                jitter = 1.0 + random.random()
                 sleep_seconds = exp.seconds + (exp.millis / 1000.0)
-                jitter = random.random()
+                logging.info(
+                    f"Exception reported a minimum wait time of {sleep_seconds} seconds. "
+                    f"Waiting {sleep_seconds + jitter} seconds."
+                )
                 current_time = time.monotonic()
-                # Should be OK without a lock because variable assignment is atomic in Python.
-                next_request_time = current_time + sleep_seconds + jitter
+                next_request_time_local = current_time + sleep_seconds + jitter
+
+                async with next_request_time_lock:
+                    # Don't accidentally decrease the time to the next request.
+                    next_request_time = max(next_request_time, next_request_time_local)
+
             except httpx.ReadTimeout:
                 # Try again.
                 pass
