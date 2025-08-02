@@ -172,7 +172,7 @@ async def download_income(
 async def download_all(*, max_age: datetime.timedelta, client: httpx.AsyncClient):
     return await asyncio.gather(
         *[
-            await download_income(max_age=max_age, client=client, symbol=symbol)
+            download_income(max_age=max_age, client=client, symbol=symbol)
             for symbol in stockdice.stocklist.list_symbols()
         ]
     )
