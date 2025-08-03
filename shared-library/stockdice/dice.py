@@ -17,6 +17,7 @@ from __future__ import annotations
 import dataclasses
 import sqlite3
 
+import numpy.random
 import polars
 
 import stockdice.config
@@ -127,7 +128,7 @@ def _load_dfs() -> _Tables:
     )
 
 
-def roll():
+def roll(n: int = 1):
     dfs = _load_dfs()
     # Convert currencies to USD
     company_profile_usd = dfs.company_profile.join(
@@ -136,7 +137,14 @@ def roll():
         symbol=polars.col("symbol"),
         marketCapUSD=polars.col("marketCap") * polars.col("price_forex"),
         # marketCap=polars.col("marketCap"),
-    )
+    ).with_row_index("idx")
+    # Inspired by the numpy implementation of weighted sampling with replacement:
+    # https://github.com/numpy/numpy/blob/f5a6af86acab7fcd1644fad76b5fbe466a0a98dd/numpy/random/mtrand.pyx#L1009-L1015
     # TODO: support more than just market cap weighted.
-
-    return company_profile_usd  # .filter(polars.col("marketCapUSD") < (polars.col("marketCap")))
+    pdf = company_profile_usd["marketCapUSD"] / company_profile_usd["marketCapUSD"].sum()
+    cdf = pdf.cum_sum()
+    rng = numpy.random.default_rng()
+    targets = rng.uniform(0, 1, size=(n,))
+    sample_idxs = cdf.search_sorted(targets).to_frame("idx")
+    samples = company_profile_usd.join(sample_idxs, on="idx")
+    return samples
