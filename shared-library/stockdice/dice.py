@@ -128,23 +128,38 @@ def _load_dfs() -> _Tables:
     )
 
 
-def roll(n: int = 1):
+def roll(*, n: int = 1, weights=None):
     dfs = _load_dfs()
+
     # Convert currencies to USD
-    company_profile_usd = dfs.company_profile.join(
-        dfs.forex, left_on="currency", right_on="from_currency", suffix="_forex"
-    ).select(
-        symbol=polars.col("symbol"),
-        marketCapUSD=polars.col("marketCap") * polars.col("price_forex"),
-        # marketCap=polars.col("marketCap"),
-    ).with_row_index("idx")
-    # Inspired by the numpy implementation of weighted sampling with replacement:
-    # https://github.com/numpy/numpy/blob/f5a6af86acab7fcd1644fad76b5fbe466a0a98dd/numpy/random/mtrand.pyx#L1009-L1015
-    # TODO: support more than just market cap weighted.
-    pdf = company_profile_usd["marketCapUSD"] / company_profile_usd["marketCapUSD"].sum()
-    cdf = pdf.cum_sum()
-    rng = numpy.random.default_rng()
-    targets = rng.uniform(0, 1, size=(n,))
-    sample_idxs = cdf.search_sorted(targets).to_frame("idx")
-    samples = company_profile_usd.join(sample_idxs, on="idx")
-    return samples
+    company_profile_usd = (
+        dfs.company_profile.join(
+            dfs.forex, left_on="currency", right_on="from_currency", suffix="_forex"
+        )
+        .select(
+            polars.col("symbol"),
+            polars.col("companyName"),
+            marketCapUSD=polars.col("marketCap") * polars.col("price_forex"),
+        )
+        .with_row_index("idx")
+    )
+
+    if weights is None:
+        samples = company_profile_usd.sample(n=n)
+    else:
+        # Inspired by the numpy implementation of weighted sampling with replacement:
+        # https://github.com/numpy/numpy/blob/f5a6af86acab7fcd1644fad76b5fbe466a0a98dd/numpy/random/mtrand.pyx#L1009-L1015
+        # TODO: support more than just market cap weighted.
+        pdf = (
+            company_profile_usd["marketCapUSD"]
+            / company_profile_usd["marketCapUSD"].sum()
+        )
+        cdf = pdf.cum_sum()
+        rng = numpy.random.default_rng()
+        targets = rng.uniform(0, 1, size=(n,))
+        sample_idxs = cdf.search_sorted(targets).to_frame("idx")
+        samples = company_profile_usd.join(sample_idxs, on="idx")
+
+    return samples.select(
+        polars.col("symbol"), polars.col("companyName"), polars.col("marketCapUSD")
+    )
