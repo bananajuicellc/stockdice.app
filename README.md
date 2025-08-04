@@ -29,14 +29,6 @@ Initialize the local database.
 uv run cli/initialize_db.py
 ```
 
-### [Optional] Choose your formula
-
-In this stock picker, I'm weighting about 50% on market cap and the rest on an
-arbitrary-ish formula to shift towards "value". To change to a purely market cap
-weighted picker, change the [formula to compute the "average" column in
-`cli/roll_stockdice.py`](https://github.com/tswast/stockdice/blob/977ad90827136bd8d78db653051139a8eb67bf58/stockdice.py#L90-L98)
-to just `numpy.fmax(screen_ones, screen["market_cap"])`.
-
 ## Usage
 
 To use this random stock picker, first download the latest data from the FMP API.
@@ -59,6 +51,23 @@ Purchase a selection of this stock. For example, purchase $1,000 of each stock
 chosen so that the weighting of your portfolio approaches that of the formula.
 It is helpful to use a broker which sells partial shares so that you can get as
 close to an even amout per stock as possible.
+
+Other options are available. See help:
+
+```
+$ uv run cli/roll_stockdice.py -h
+usage: stockdice.py [-h] [-n NUMBER] [-o OUTPUT] [-f {text,csv}] [-w]
+
+options:
+  -h, --help            show this help message and exit
+  -n NUMBER, --number NUMBER
+                        Number of samples.
+  -o OUTPUT, --output OUTPUT
+                        File path for output.
+  -f {text,csv}, --format {text,csv}
+                        Output format.
+  -w, --weighted        Weight stocks by market capitalization instead of evenly.
+```
 
 ## Disclaimer
 

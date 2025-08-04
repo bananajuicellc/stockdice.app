@@ -43,10 +43,20 @@ def main(*, number_of_rolls, output_path, output_format):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="stockdice.py")
-    parser.add_argument("-n", "--number", type=int, default=1)
-    parser.add_argument("-o", "--output", default="--")
-    parser.add_argument("-f", "--format", default="text")
-    parser.add_argument("-w", "--weighted", action="store_true", default=False)
+    parser.add_argument(
+        "-n", "--number", type=int, default=1, help="Number of samples."
+    )
+    parser.add_argument("-o", "--output", default="--", help="File path for output.")
+    parser.add_argument(
+        "-f", "--format", default="text", choices=["text", "csv"], help="Output format."
+    )
+    parser.add_argument(
+        "-w",
+        "--weighted",
+        action="store_true",
+        default=False,
+        help="Weight stocks by market capitalization instead of evenly.",
+    )
     args = parser.parse_args()
     main(
         number_of_rolls=args.number, output_path=args.output, output_format=args.format
