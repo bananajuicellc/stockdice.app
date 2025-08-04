@@ -1,0 +1,13 @@
+[project]
+name = "stockdice"
+version = "0.1.0"
+description = "A random stock picker working with FMP API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "adbc-driver-sqlite>=1.7.0",
+    "httpx>=0.28.1",
+    "numpy>=2.3.2",
+    "pyarrow>=21.0.0",
+    "toml>=0.10.2",
+]

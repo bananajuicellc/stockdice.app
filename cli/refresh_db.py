@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+# coding: utf-8
+# Copyright 2025 Banana Juice LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Command to refresh the database (1 time)."""
+
+import argparse
+import asyncio
+import datetime
+import logging
+import sys
+
+import httpx
+
+import stockdice.balance_sheet
+import stockdice.company_profile
+import stockdice.forex
+import stockdice.income
+import stockdice.stocklist
+import stockdice.timeutils
+
+
+# TODO: Where should I be configuring logging?
+# https://stackoverflow.com/a/14058475/101923
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
+
+async def main(*, max_age: datetime.timedelta = datetime.timedelta(days=1)):
+    async with httpx.AsyncClient() as client:
+        await stockdice.stocklist.download_symbol_list(client=client)
+
+        await asyncio.gather(
+            stockdice.forex.download_forex(max_age=max_age, client=client),
+            stockdice.company_profile.download_all(max_age=max_age, client=client),
+            stockdice.income.download_all(max_age=max_age, client=client),
+            stockdice.balance_sheet.download_all(max_age=max_age, client=client),
+        )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--max-age", default="1d")
+    args = parser.parse_args()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    max_age = stockdice.timeutils.parse_timedelta(args.max_age)
+    loop.run_until_complete(main(max_age=max_age))

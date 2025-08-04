@@ -1,5 +1,7 @@
 environment.toml
 third_party/financialmodelingprep.com
+.vscode
+.ruff_cache/
 
 # https://github.com/github/gitignore/blob/master/Python.gitignore
 # Byte-compiled / optimized / DLL files
