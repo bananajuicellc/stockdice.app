@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import pathlib
 import sqlite3
 
@@ -27,8 +29,13 @@ DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 class LocalConfig:
     def __init__(self):
         self._db = None
+        self._storage_client = None
         with open(REPO_ROOT / "environment.toml") as config_file:
             self._config = toml.load(config_file)
+
+    @property
+    def bucket(self) -> str:
+        return self._config["bucket"]
 
     @property
     def fmp_api_key(self):

@@ -1,2 +1,3 @@
 FMP_API_KEY = "abcdefghijklmnopqrstuvwxyz"
 requests_per_minute = 300
+bucket = "your-bucket"
