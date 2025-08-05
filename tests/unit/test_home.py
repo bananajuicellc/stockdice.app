@@ -11,3 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+from __future__ import annotations
+
+import flask.testing
+
+
+def test_homepage_redirect(
+    client: flask.testing.FlaskClient,
+):
+    def load_page():
+        return client.get(
+            "/",
+            follow_redirects=True,
+        )
+
+    response = load_page
+    assert response.status_code == 200
+
+
+def test_homepage_en(
+    client: flask.testing.FlaskClient,
+):
+    def load_page():
+        return client.get("/en/")
+
+    response = load_page
+    assert response.status_code == 200

@@ -12,20 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import flask
+import pytest
 
-from stockdiceapp import render
-
-
-bp = flask.Blueprint("home", __name__)
+from stockdiceapp import create_app
 
 
-@bp.route("/")
-def index():
-    return flask.redirect("/en/")
+@pytest.fixture()
+def app():
+    app = create_app()
+    app.config.update(
+        {
+            "TESTING": True,
+        }
+    )
+
+    # other setup can go here
+
+    yield app
+
+    # clean up / reset resources here
 
 
-@bp.route("/en/")
-def english_us():
-    # TODO: use place_name instead of place_id and make the search page find the right place_id
-    return render.render_template("home.html.j2")
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+
+
+@pytest.fixture()
+def runner(app):
+    return app.test_cli_runner()

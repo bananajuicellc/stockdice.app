@@ -16,7 +16,7 @@ import os
 
 import flask
 
-from stockdiceapp import home
+from stockdice import home
 
 
 def create_app(test_config=None):

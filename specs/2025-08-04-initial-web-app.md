@@ -1,6 +1,6 @@
-# Title of the Specification
+# Roll the stock dice
 
-*Provide a brief overview of the feature or bug.*
+
 
 ## Background
 
