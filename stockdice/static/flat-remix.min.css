@@ -1,0 +1,231 @@
+input::placeholder,
+textarea::placeholder {
+    opacity: 1;
+    transition: opacity 0.2s;
+    color: inherit;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+    opacity: 0.2;
+}
+
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+    opacity: 1;
+    transition: opacity 0.2s;
+    color: inherit;
+}
+
+input:focus:-ms-input-placeholder,
+textarea:focus:-ms-input-placeholder {
+    opacity: 0.2;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+    display: none;
+}
+
+::-moz-focus-inner {
+    border: 0;
+}
+
+::-moz-selection {
+    color: #fff;
+    background: #000;
+}
+
+::selection {
+    color: #fff;
+    background: #000;
+}
+
+* {
+    box-sizing: border-box;
+    outline: 0;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none;
+    font-family: "AtkinsonHyperlegible", sans-serif;
+    letter-spacing: 0;
+}
+
+body {
+    background-color: #fafafa;
+    color: #000000;
+    margin: 0;
+    font-size: 12pt;
+    cursor: default;
+    user-select: none;
+}
+
+a {
+    color: #367bf0;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+label {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0.56em 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.1em;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: bolder;
+    margin: 0.7em 0;
+}
+
+h2 {
+    font-size: 1.8em;
+    font-weight: bold;
+    margin: 0.8em 0;
+}
+
+h3 {
+    font-size: 1.6em;
+    font-weight: lighter;
+    margin: 0.9em 0;
+}
+
+h4 {
+    font-size: 1.4em;
+    font-weight: lighter;
+    margin: 1em 0;
+}
+
+h5 {
+    margin: 0.5em 0;
+    font-size: 1.2em;
+    font-weight: normal;
+}
+
+h6 {
+    margin: 1em 0 1em 1.4em;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+section, article, .section, .article, .paper {
+    line-height: 2em;
+    word-wrap: break-word;
+    word-break: normal;
+}
+
+hr {
+    width: 50%;
+    border: 3px solid #5c616c;
+    background-color: #5c616c;
+    border-radius: 4px;
+}
+
+code, pre {
+    padding: 5px 10px;
+    border-radius: 4px;
+    overflow: auto;
+    box-shadow: 0 5px 30px 0 rgba(0, 0, 0, 0.05);
+}
+
+code {
+    background: #e6e6e6;
+}
+
+pre {
+    background: white;
+    margin: 40px 0;
+}
+
+blockquote {
+    background-color: #FFF;
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-shadow: 0 5px 30px 0 rgba(0, 0, 0, 0.05);
+    border-left: 6px solid #49aee6;
+}
+
+input:not([type=submit]):not([type=reset]):not([type=radio]):not([type=checkbox]),
+textarea,
+select {
+    border: 2px solid #000;
+    background: #FFF;
+    color: #000;
+    border-radius: 3px;
+    margin: 7px 0;
+    height: 45px;
+    max-width: 80%;
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: text;
+}
+
+input[type=checkbox],
+input[type=radio] {
+    font-size: 1em;
+    border: 0.125em solid #000;
+    background: #FFF;
+    cursor: pointer;
+    height: 1.2em;
+    width: 1.2em;
+    box-shadow: inset 0 0 0 0.125em #FFF;
+    vertical-align: text-top;
+    margin: 0 0.3em;
+    padding: 0;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+input[type=checkbox]:checked,
+input[type=radio]:checked {
+    background: #367bf0;
+}
+
+textarea {
+    padding: 10px;
+    height: 200px;
+}
+
+select {
+    cursor: pointer;
+    padding-right: 40px;
+    text-align-last: center;
+    background: #FFF;
+}
+
+button,
+input[type=submit],
+input[type=reset] {
+    border-radius: 4px;
+    font-weight: bold;
+    color: #000000;
+    margin-top: 7px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 16px;
+    height: 45px;
+    width: 120px;
+    border: 3px solid #272a34;
+    background: #ffffff;
+    line-height: 40px;
+    display: block;
+    transition: border 0.2s, background 0.2s, transform 0.2s, color 0.2s;
+}
+
+button:hover,
+input[type=submit]:hover,
+input[type=reset]:hover {
+  transform: scale(1.05);
+  background: #04d43f;
+}

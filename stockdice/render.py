@@ -11,3 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Custom rendering utilities to makes sure the desired options are set."""
+
+import flask
+
+
+def render_template(template_name_or_list, **context):
+    """Renders a template but includes the canonical URL."""
+    canonical_url = flask.url_for(
+        flask.request.endpoint,
+        _external=True,
+        _scheme="https",
+        **flask.request.view_args,
+    )
+    return flask.render_template(
+        template_name_or_list, canonical_url=canonical_url, **context
+    )

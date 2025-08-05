@@ -20,7 +20,7 @@ import sqlite3
 import toml
 
 
-REPO_ROOT = pathlib.Path(__file__).parent.parent.parent
+REPO_ROOT = pathlib.Path(__file__).parent.parent
 FMP_DIR = REPO_ROOT / "third_party" / "financialmodelingprep.com"
 DB_PATH = FMP_DIR / "stockdice.sqlite"
 DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
