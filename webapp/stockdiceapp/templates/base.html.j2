@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="{{ canonical_url }}"/>
+
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <link rel="stylesheet" type="text/css" href="/static/flat-remix.min.css" />
+
+    <title>{% block title %}{% endblock %} - StockDice.app</title>
+
+</head>
+
+<h1> 
+    <a href="{{ url_for('home.index') }}" class="logo-link">StockDice.app</a>
+    - {{ self.title() }}
+</h1>
+
+<div class="content">
+{% block content %}{% endblock %}
+</div>
+
+<footer>
+    <a href="{{ url_for('home.index') }}">Home</a>
+
+    <p><small>&copy; <a href="https://bananajuice.tech/">Banana Juice LLC</a>, Chicago, Illinois, USA</small></p>
+</footer>
+</html>
