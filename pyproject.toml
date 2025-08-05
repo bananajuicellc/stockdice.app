@@ -26,4 +26,5 @@ include = ["stockdice"]
 dev = [
     "freezegun>=1.5.4",
     "pytest>=8.4.1",
+    "ruff>=0.12.7",
 ]

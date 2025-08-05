@@ -111,7 +111,7 @@ async def download_all(*, client: httpx.AsyncClient):
 async def download_market_data(*, client: httpx.AsyncClient):
     """During market hours, just download data that changes more frequently."""
     await stockdice.stocklist.download_symbol_list(client=client)
-    
+
     await asyncio.gather(
         stockdice.forex.download_forex(max_age=MAX_AGE, client=client),
         stockdice.company_profile.download_all(max_age=MAX_AGE, client=client),
