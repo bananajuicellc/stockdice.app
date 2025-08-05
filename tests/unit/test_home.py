@@ -21,21 +21,15 @@ import flask.testing
 def test_homepage_redirect(
     client: flask.testing.FlaskClient,
 ):
-    def load_page():
-        return client.get(
-            "/",
-            follow_redirects=True,
-        )
-
-    response = load_page
+    response = client.get(
+        "/",
+        follow_redirects=True,
+    )
     assert response.status_code == 200
 
 
 def test_homepage_en(
     client: flask.testing.FlaskClient,
 ):
-    def load_page():
-        return client.get("/en/")
-
-    response = load_page
+    response = client.get("/en/")
     assert response.status_code == 200

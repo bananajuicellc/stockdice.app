@@ -14,7 +14,7 @@
 
 import pytest
 
-from stockdiceapp import create_app
+from stockdice import create_app
 
 
 @pytest.fixture()
