@@ -34,7 +34,10 @@ class _Tables:
 def _load_dfs() -> _Tables:
     # TODO: we might be able to use read_database_uri if we're more careful
     # about what types we store in each column.
-    connection = sqlite3.connect(stockdice.config.DB_REPLICA_PATH.absolute())
+    db = sqlite3.connect(stockdice.config.DB_REPLICA_PATH.absolute())
+    # Enable Write-Ahead Logging for greater concurrency.
+    # https://stackoverflow.com/a/39265148/101923
+    db.execute("PRAGMA journal_mode=WAL")
     company_profile_query = """
         SELECT *
         FROM company_profile
@@ -42,11 +45,11 @@ def _load_dfs() -> _Tables:
         AND isFund = false;
         """
     company_profile = polars.read_database(
-        query=company_profile_query, connection=connection
+        query=company_profile_query, connection=db
     )
     forex = polars.read_database(
         query="SELECT * FROM forex WHERE to_currency = 'USD';",
-        connection=connection,
+        connection=db,
     )
     balance_sheet_query = """
         SELECT
@@ -82,7 +85,7 @@ def _load_dfs() -> _Tables:
             rn = 1;
         """
     most_recent_fy_balance_sheet = polars.read_database(
-        query=balance_sheet_query, connection=connection
+        query=balance_sheet_query, connection=db
     )
     income_query = """
         SELECT
@@ -118,7 +121,7 @@ def _load_dfs() -> _Tables:
             rn = 1;
         """
     most_recent_fy_income = polars.read_database(
-        query=income_query, connection=connection
+        query=income_query, connection=db
     )
     return _Tables(
         company_profile=company_profile,

@@ -65,6 +65,10 @@ def backup_db():
     # End the transaction that was started automatically.
     db.executescript("ROLLBACK;")
 
+    # Enable Write-Ahead Logging for greater concurrency.
+    # https://stackoverflow.com/a/39265148/101923
+    db.execute("PRAGMA journal_mode=WAL")
+
     backup_path = stockdice.config.DB_REPLICA_PATH
     bucket_name = stockdice.config.config.bucket
     storage_client = storage.Client()

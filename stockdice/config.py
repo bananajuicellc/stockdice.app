@@ -49,6 +49,13 @@ class LocalConfig:
     def db(self):
         if self._db is None:
             self._db = sqlite3.connect(FMP_DIR / "stockdice.sqlite", autocommit=False)
+
+            # End the transaction that was started automatically.
+            self._db.executescript("ROLLBACK;")
+
+            # Enable Write-Ahead Logging for greater concurrency.
+            # https://stackoverflow.com/a/39265148/101923
+            self._db.execute("PRAGMA journal_mode=WAL")
         return self._db
 
 
