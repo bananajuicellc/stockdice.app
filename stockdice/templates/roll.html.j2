@@ -1,0 +1,7 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+{{symbol}} - {{company_name}} (${{"{:,}".format(market_cap_usd)}} market cap)
+{% endblock %}

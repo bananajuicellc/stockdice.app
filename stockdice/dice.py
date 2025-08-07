@@ -131,7 +131,7 @@ def _load_dfs() -> _Tables:
     )
 
 
-def roll(*, n: int = 1, weights=None):
+def roll(*, n: int = 1, weights=None) -> polars.DataFrame:
     dfs = _load_dfs()
 
     # Convert currencies to USD
@@ -143,6 +143,9 @@ def roll(*, n: int = 1, weights=None):
             polars.col("symbol"),
             polars.col("companyName"),
             marketCapUSD=polars.col("marketCap") * polars.col("price_forex"),
+        )
+        .filter(
+            polars.col("marketCapUSD") > 0
         )
         .with_row_index("idx")
     )
