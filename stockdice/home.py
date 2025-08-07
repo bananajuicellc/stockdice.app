@@ -31,6 +31,11 @@ def english_us():
     return render.render_template("home.html.j2")
 
 
+@bp.route("/en/customize/")
+def customize():
+    return render.render_template("customize.html.j2")
+
+
 @bp.route("/en/roll-uniform/")
 def roll_uniform():
     result = dice.roll()
