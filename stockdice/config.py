@@ -51,11 +51,12 @@ class LocalConfig:
             self._db = sqlite3.connect(FMP_DIR / "stockdice.sqlite", autocommit=False)
 
             # End the transaction that was started automatically.
-            self._db.executescript("ROLLBACK;")
+            self._db.execute("ROLLBACK;")
 
             # Enable Write-Ahead Logging for greater concurrency.
             # https://stackoverflow.com/a/39265148/101923
             self._db.execute("PRAGMA journal_mode=WAL")
+            self._db.execute("BEGIN TRANSACTION;")
         return self._db
 
 
