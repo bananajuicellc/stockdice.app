@@ -3,5 +3,9 @@
 {% block title %}Results{% endblock %}
 
 {% block content %}
-{{symbol}} - {{company_name}} (${{"{:,}".format(market_cap_usd)}} market cap)
+<div class="dice">
+{{symbol}}
+</div>
+
+<p>{{company_name}} (${{"{:,}".format(market_cap_usd)}} market cap)</p>
 {% endblock %}

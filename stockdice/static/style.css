@@ -83,6 +83,10 @@ div.dice {
   margin: 1em;
 }
 
+a.dice-link:hover {
+  transform: rotate3d(1, 1, 0.5, 5deg);
+}
+
 div.dice-navigation {
   display: flex;
   justify-content: center;
