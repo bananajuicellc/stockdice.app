@@ -1,0 +1,9 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: stockdiceapp
+spec:
+  template:
+    spec:
+      containers:
+      - image: TODO
