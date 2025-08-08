@@ -29,4 +29,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    stockdice.db.create_all_tables(stockdice.config.DB, reset=args.reset)
+    stockdice.db.create_all_tables(stockdice.config.config.db, reset=args.reset)

@@ -19,7 +19,7 @@ FMP_INCOME = "https://financialmodelingprep.com/stable/income-statement?symbol={
 async def download_income(
     *, client: httpx.AsyncClient, symbol: str, max_age: datetime.timedelta
 ):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     now_us = stockdice.timeutils.now_in_microseconds()
     last_updated = db.execute(
         """

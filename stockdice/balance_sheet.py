@@ -20,7 +20,7 @@ FMP_BALANCE_SHEET = "https://financialmodelingprep.com/stable/balance-sheet-stat
 async def download_balance_sheet(
     *, client: httpx.AsyncClient, symbol: str, max_age: datetime.timedelta
 ):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     now_us = stockdice.timeutils.now_in_microseconds()
     last_updated = db.execute(
         """

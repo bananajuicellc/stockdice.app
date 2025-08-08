@@ -38,7 +38,7 @@ def load_forex():
     global forex_to_usd
     forex_to_usd = {"USD": 1.0}
 
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     rows = db.execute(
         """
         SELECT from_currency, price
@@ -77,7 +77,7 @@ async def download_forex(
 
 @stockdice.ratelimits.retry_fmp
 async def download_forex_list(*, client: httpx.AsyncClient):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     url = FMP_FOREX_LIST.format(apikey=stockdice.config.FMP_API_KEY)
     symbols = []
 
@@ -121,7 +121,7 @@ async def download_forex_list(*, client: httpx.AsyncClient):
 async def download_forex_quote(
     *, client: httpx.AsyncClient, symbol: str, max_age: datetime.timedelta
 ):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
 
     now_us = stockdice.timeutils.now_in_microseconds()
     last_updated = db.execute(
