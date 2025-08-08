@@ -14,24 +14,53 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import sqlite3
 
+import google.auth
+from google.cloud import secretmanager_v1
 import toml
 
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent
+CONFIG_PATH = REPO_ROOT / "environment.toml"
 FMP_DIR = REPO_ROOT / "third_party" / "financialmodelingprep.com"
 DB_PATH = FMP_DIR / "stockdice.sqlite"
 DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 
 
-class LocalConfig:
-    def __init__(self):
+class Config:
+    def __init__(self, config: dict):
         self._db = None
         self._storage_client = None
-        with open(REPO_ROOT / "environment.toml") as config_file:
-            self._config = toml.load(config_file)
+        self._config = config
+
+    @classmethod
+    def create_from_local(cls):
+        with open(CONFIG_PATH) as config_file:
+            return cls(toml.load(config_file))
+
+    @classmethod
+    def create_from_gcp(cls, project_id: str | None = None):
+        credentials, default_project_id = google.auth.default()
+        project_id = project_id or default_project_id
+
+        client = secretmanager_v1.SecretManagerServiceClient(credentials=credentials)
+
+        config = {
+            "bucket": None,
+            "FMP_API_KEY": None,
+            "requests_per_minute": None,
+        }
+        for key in config:
+            name = f"projects/{project_id}/secrets/{key}/versions/latest"
+            response = client.access_secret_version(
+                name=name,
+            )
+            config[key] = response.payload.data.decode("utf-8")
+        
+        return cls(config)
 
     @property
     def bucket(self) -> str:
@@ -43,7 +72,7 @@ class LocalConfig:
 
     @property
     def requests_per_minute(self):
-        return self._config["requests_per_minute"]
+        return float(self._config["requests_per_minute"])
 
     @property
     def db(self):
@@ -60,6 +89,22 @@ class LocalConfig:
         return self._db
 
 
-config = LocalConfig()
+def create_config():
+    """Three cases: local, cloud, and local but testing cloud."""
+
+    if os.getenv("STOCKDICE_CONFIG") == "CLOUD":
+        if CONFIG_PATH.exists():
+            with open(CONFIG_PATH) as config_file:
+                project_id = toml.load(config_file).get("gcp_project")
+        else:
+            project_id = None
+        return Config.create_from_gcp(project_id=project_id)
+    elif CONFIG_PATH.exists:
+        return Config.create_from_local()
+    else:
+        return Config.create_from_gcp()
+
+
+config = create_config()
 FMP_API_KEY = config.fmp_api_key
 REQUESTS_PER_MINUTE = config.requests_per_minute
