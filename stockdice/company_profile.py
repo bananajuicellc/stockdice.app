@@ -17,7 +17,7 @@ FMP_COMPANY_PROFILE = (
 
 
 def is_fund_or_etf(symbol: str):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     row = db.execute(
         """
         SELECT isEtf, isFund
@@ -41,7 +41,7 @@ def is_fund_or_etf(symbol: str):
 async def download_company_profile(
     *, client: httpx.AsyncClient, symbol: str, max_age: datetime.timedelta
 ):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     now_us = stockdice.timeutils.now_in_microseconds()
     last_updated = db.execute(
         """

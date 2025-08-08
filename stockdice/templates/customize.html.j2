@@ -1,0 +1,28 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}Customize{% endblock %}
+
+{% block content %}
+<div class="dice">
+Coming soon.
+</div>
+
+<p>Learn when new features arrive, such as customizable weights for your stock
+dice, by signing up for our newsletter.</p>
+
+<form
+  action="https://buttondown.com/api/emails/embed-subscribe/stockdiceapp"
+  method="post"
+  target="popupwindow"
+  onsubmit="window.open('https://buttondown.com/stockdiceapp', 'popupwindow')"
+  class="embeddable-buttondown-form"
+>
+  <label for="bd-email">Enter your email</label>
+  <input type="email" name="email" id="bd-email" />
+  
+  <input type="submit" value="Subscribe" />
+  <p>
+    <a href="https://buttondown.com/refer/stockdiceapp" target="_blank">Powered by Buttondown.</a>
+  </p>
+</form>
+{% endblock %}

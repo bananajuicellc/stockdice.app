@@ -61,6 +61,5 @@ class LocalConfig:
 
 
 config = LocalConfig()
-DB = config.db
 FMP_API_KEY = config.fmp_api_key
 REQUESTS_PER_MINUTE = config.requests_per_minute

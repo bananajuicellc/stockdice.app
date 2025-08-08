@@ -14,6 +14,7 @@
 
 import flask
 
+from stockdice import dice
 from stockdice import render
 
 
@@ -27,5 +28,31 @@ def index():
 
 @bp.route("/en/")
 def english_us():
-    # TODO: use place_name instead of place_id and make the search page find the right place_id
     return render.render_template("home.html.j2")
+
+
+@bp.route("/en/customize/")
+def customize():
+    return render.render_template("customize.html.j2")
+
+
+@bp.route("/en/roll-uniform/")
+def roll_uniform():
+    result = dice.roll()
+    return render.render_template(
+        "roll.html.j2",
+        symbol=result['symbol'].item(),
+        company_name=result['companyName'].item(),
+        market_cap_usd=int(result['marketCapUSD'].item()),
+    )
+
+
+@bp.route("/en/roll-market-cap/")
+def roll_market_cap():
+    result = dice.roll(weights=True)
+    return render.render_template(
+        "roll.html.j2",
+        symbol=result['symbol'].item(),
+        company_name=result['companyName'].item(),
+        market_cap_usd=int(result['marketCapUSD'].item()),
+    )

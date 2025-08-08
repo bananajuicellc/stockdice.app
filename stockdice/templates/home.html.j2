@@ -1,7 +1,11 @@
 {% extends 'base.html.j2' %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Roll{% endblock %}
 
 {% block content %}
-Roll the dice to pick a stock.
+<div class="dice-navigation">
+    <a href="/en/roll-uniform/" class="dice-link"><div class="dice">Uniform</div></a>
+    <a href="/en/roll-market-cap/" class="dice-link"><div class="dice">Market Cap</div></a>
+    <a href="/en/customize/" class="dice-link"><div class="dice">Custom weights (coming soon)</div>
+</div>
 {% endblock %}

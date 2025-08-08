@@ -33,7 +33,7 @@ FMP_FINANCIAL_STATEMENT_SYMBOL_LIST = "https://financialmodelingprep.com/stable/
 
 @stockdice.ratelimits.retry_fmp
 async def download_symbol_list(*, client: httpx.AsyncClient):
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     url = FMP_FINANCIAL_STATEMENT_SYMBOL_LIST.format(
         apikey=stockdice.config.FMP_API_KEY
     )
@@ -59,7 +59,7 @@ async def download_symbol_list(*, client: httpx.AsyncClient):
 
 
 def list_symbols():
-    db = stockdice.config.DB
+    db = stockdice.config.config.db
     # TODO: support global stocks.
     return [
         row[0]

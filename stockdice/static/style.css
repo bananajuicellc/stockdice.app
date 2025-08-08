@@ -68,3 +68,28 @@ fieldset label {
   align-self: center;
   margin-right: 2pt;
 }
+
+div.dice {
+  /* center the text vertically and horizontally */
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+
+  border-style: solid;
+  border-color: black;
+  width: 10em;
+  height: 10em;
+  margin: 1em;
+}
+
+a.dice-link:hover {
+  transform: rotate3d(1, 1, 0.5, 5deg);
+}
+
+div.dice-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
