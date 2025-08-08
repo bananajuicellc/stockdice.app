@@ -17,9 +17,12 @@ from __future__ import annotations
 import os
 import pathlib
 import sqlite3
+import tempfile
+import time
 
 import google.auth
 from google.cloud import secretmanager_v1
+import google.cloud.storage
 import toml
 
 
@@ -33,6 +36,8 @@ DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 class Config:
     def __init__(self, config: dict):
         self._db = None
+        self._replica_db = None
+        self._replica_db_refresh_time = time.monotonic()
         self._storage_client = None
         self._config = config
 
@@ -50,6 +55,7 @@ class Config:
 
         config = {
             "bucket": None,
+            "backup_interval_seconds": None,
             "FMP_API_KEY": None,
             "requests_per_minute": None,
         }
@@ -63,21 +69,54 @@ class Config:
         return cls(config)
 
     @property
+    def backup_interval_seconds(self) -> float:
+        return float(self._config["backup_interval_seconds"])
+
+    @property
     def bucket(self) -> str:
         return self._config["bucket"]
 
     @property
-    def fmp_api_key(self):
+    def fmp_api_key(self) -> str:
         return self._config["FMP_API_KEY"]
 
     @property
-    def requests_per_minute(self):
+    def requests_per_minute(self) -> float:
         return float(self._config["requests_per_minute"])
+
+    @property
+    def replica_db(self):
+        now = time.monotonic()
+        # TODO(tswast): Maybe some kind of lock to avoid downloading the
+        # database more than once in multi-threaded environments?
+        if (
+            self._replica_db is None
+            or (now - self._replica_db_refresh_time) > self.backup_interval_seconds
+        ):
+            self._replica_db_refresh_time = now
+
+            # Load from file if present or load from gcs
+            if DB_REPLICA_PATH.exists():
+                self._replica_db = sqlite3.connect(DB_REPLICA_PATH, autocommit=False)
+            else:
+                if self._storage_client is None:
+                    self._storage_client = google.cloud.storage.Client()
+                self._replica_db = load_replica_from_gcs(self._storage_client, bucket_name=self.bucket)
+
+            # End the transaction that was started automatically.
+            self._replica_db.execute("ROLLBACK;")
+
+            # Enable Write-Ahead Logging for greater concurrency.
+            # https://stackoverflow.com/a/39265148/101923
+            self._replica_db.execute("PRAGMA journal_mode=WAL")
+            self._replica_db.execute("BEGIN TRANSACTION;")
+        
+        return self._replica_db
 
     @property
     def db(self):
         if self._db is None:
-            self._db = sqlite3.connect(FMP_DIR / "stockdice.sqlite", autocommit=False)
+            self._db = sqlite3.connect(DB_PATH, autocommit=False)
 
             # End the transaction that was started automatically.
             self._db.execute("ROLLBACK;")
@@ -87,6 +126,15 @@ class Config:
             self._db.execute("PRAGMA journal_mode=WAL")
             self._db.execute("BEGIN TRANSACTION;")
         return self._db
+
+
+def load_replica_from_gcs(storage_client: google.cloud.storage.Client, bucket_name: str):
+    uri = f"gs://{bucket_name}/stockdice_backup.sqlite"
+    with tempfile.NamedTemporaryFile(delete_on_close=False) as fp:
+        storage_client.download_blob_to_file(uri, fp)
+        db_replica_path = fp.name
+        print(db_replica_path)
+    return sqlite3.connect(db_replica_path, autocommit=False)
 
 
 def create_config():

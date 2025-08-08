@@ -53,7 +53,6 @@ root.addHandler(handler)
 # It can take about 1 hour to refresh, so include a max age about that long so
 # we can save time if the task has to restart.
 MAX_AGE = datetime.timedelta(minutes=60)
-BACKUP_INTERVAL_SECONDS = 10 * 60
 
 
 def backup_db():
@@ -89,7 +88,7 @@ def backup_db():
             """
         )
         blob.upload_from_filename(backup_path)
-        time.sleep(BACKUP_INTERVAL_SECONDS)
+        time.sleep(stockdice.config.config.backup_interval_seconds)
 
 
 def backup_db_loop():

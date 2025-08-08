@@ -1,4 +1,5 @@
 FMP_API_KEY = "abcdefghijklmnopqrstuvwxyz"
 requests_per_minute = 300
+backup_interval_seconds = 600
 bucket = "your-bucket"
 gcp_project = "your-project-id"
