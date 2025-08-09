@@ -6,7 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "flask>=3.1.1",
+    "google-auth>=2.40.3",
+    "google-cloud-secret-manager>=2.24.0",
     "google-cloud-storage>=3.2.0",
+    "gunicorn>=23.0.0",
     "httpx>=0.28.1",
     "numpy>=2.3.2",
     "polars>=1.32.0",
@@ -25,6 +28,7 @@ include = ["stockdice"]
 [dependency-groups]
 dev = [
     "freezegun>=1.5.4",
+    "ipython>=9.4.0",
     "pytest>=8.4.1",
     "ruff>=0.12.7",
 ]
