@@ -18,6 +18,7 @@ import os
 import pathlib
 import sqlite3
 import tempfile
+import threading
 import time
 
 import google.auth
@@ -36,8 +37,9 @@ DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 class Config:
     def __init__(self, config: dict):
         self._db = None
-        self._replica_db = None
+        self._replica_db_path = None
         self._replica_db_refresh_time = time.monotonic()
+        self._replica_db_lock = threading.Lock()
         self._storage_client = None
         self._config = config
 
@@ -85,41 +87,44 @@ class Config:
         return float(self._config["requests_per_minute"])
 
     @property
-    def replica_db(self):
-        now = time.monotonic()
+    def replica_db_path(self):
+        # Load from file if present or load from gcs
+        if DB_REPLICA_PATH.exists():
+            return DB_REPLICA_PATH
+        
+
         # TODO(tswast): Maybe some kind of lock to avoid downloading the
         # database more than once in multi-threaded environments?
-        if (
-            self._replica_db is None
-            or (now - self._replica_db_refresh_time) > self.backup_interval_seconds
-        ):
-            self._replica_db_refresh_time = now
+        with self._replica_db_lock:
+            now = time.monotonic()
+            previous_path = self._replica_db_path
+            if (
+                previous_path is None
+                or (now - self._replica_db_refresh_time) > self.backup_interval_seconds
+            ):
+                self._replica_db_refresh_time = now
 
-            # Load from file if present or load from gcs
-            if DB_REPLICA_PATH.exists():
-                self._replica_db = sqlite3.connect(DB_REPLICA_PATH, autocommit=False)
-            else:
                 if self._storage_client is None:
                     self._storage_client = google.cloud.storage.Client()
-                self._replica_db = load_replica_from_gcs(self._storage_client, bucket_name=self.bucket)
-
-            # End the transaction that was started automatically.
-            self._replica_db.execute("ROLLBACK;")
-
-            # Enable Write-Ahead Logging for greater concurrency.
-            # https://stackoverflow.com/a/39265148/101923
-            self._replica_db.execute("PRAGMA journal_mode=WAL")
-            self._replica_db.execute("BEGIN TRANSACTION;")
+                
+                self._replica_db_path = load_replica_from_gcs(self._storage_client, bucket_name=self.bucket)
+                
+                if previous_path is not None:
+                    pathlib.Path(previous_path).unlink(missing_ok=True)
         
-        return self._replica_db
+        return self._replica_db_path
 
     @property
     def db(self):
         if self._db is None:
             self._db = sqlite3.connect(DB_PATH, autocommit=False)
 
-            # End the transaction that was started automatically.
-            self._db.execute("ROLLBACK;")
+            try:
+                # End the transaction that was started automatically.
+                self._db.execute("ROLLBACK;")
+            except sqlite3.OperationalError:
+                # Transaction might not have been started.
+                pass
 
             # Enable Write-Ahead Logging for greater concurrency.
             # https://stackoverflow.com/a/39265148/101923
@@ -129,12 +134,11 @@ class Config:
 
 
 def load_replica_from_gcs(storage_client: google.cloud.storage.Client, bucket_name: str):
-    uri = f"gs://{bucket_name}/stockdice_backup.sqlite"
-    with tempfile.NamedTemporaryFile(delete_on_close=False) as fp:
-        storage_client.download_blob_to_file(uri, fp)
-        db_replica_path = fp.name
-        print(db_replica_path)
-    return sqlite3.connect(db_replica_path, autocommit=False)
+    uri = f"gs://{bucket_name}/"
+    with tempfile.NamedTemporaryFile(delete=False, delete_on_close=False) as fp:
+        storage_client.bucket(bucket_name=bucket_name).blob("stockdice_backup.sqlite").download_to_file(fp)
+    db_replica_path = fp.name
+    return db_replica_path
 
 
 def create_config():
@@ -147,7 +151,7 @@ def create_config():
         else:
             project_id = None
         return Config.create_from_gcp(project_id=project_id)
-    elif CONFIG_PATH.exists:
+    elif CONFIG_PATH.exists():
         return Config.create_from_local()
     else:
         return Config.create_from_gcp()

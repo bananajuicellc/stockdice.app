@@ -34,34 +34,32 @@ class _Tables:
 def _load_dfs() -> _Tables:
     # TODO: we might be able to use read_database_uri if we're more careful
     # about what types we store in each column.
-    db = sqlite3.connect(stockdice.config.DB_REPLICA_PATH.absolute())
-    # Enable Write-Ahead Logging for greater concurrency.
-    # https://stackoverflow.com/a/39265148/101923
-    db.execute("PRAGMA journal_mode=WAL")
-    company_profile_query = """
-        SELECT *
-        FROM company_profile
-        WHERE isEtf = false
-        AND isFund = false;
-        """
-    company_profile = polars.read_database(
-        query=company_profile_query, connection=db
-    )
-    forex = polars.read_database(
-        query="SELECT * FROM forex WHERE to_currency = 'USD';",
-        connection=db,
-    )
-    balance_sheet_query = """
-        SELECT
-            symbol,
-            fiscalYear,
-            period,
-            date,
-            reportedCurrency,
-            totalAssets,
-            totalLiabilities,
-            last_updated_us
-        FROM (
+    with sqlite3.connect(stockdice.config.config.replica_db_path, autocommit=False) as db:
+        try:
+            # End the transaction that was started automatically.
+            db.execute("ROLLBACK;")
+        except sqlite3.OperationalError:
+            # Transaction might not have been started.
+            pass
+        # Enable Write-Ahead Logging for greater concurrency.
+        # https://stackoverflow.com/a/39265148/101923
+        db.execute("PRAGMA journal_mode=WAL")
+        db.execute("BEGIN TRANSACTION;")
+            
+        company_profile_query = """
+            SELECT *
+            FROM company_profile
+            WHERE isEtf = false
+            AND isFund = false;
+            """
+        company_profile = polars.read_database(
+            query=company_profile_query, connection=db
+        )
+        forex = polars.read_database(
+            query="SELECT * FROM forex WHERE to_currency = 'USD';",
+            connection=db,
+        )
+        balance_sheet_query = """
             SELECT
                 symbol,
                 fiscalYear,
@@ -70,34 +68,34 @@ def _load_dfs() -> _Tables:
                 reportedCurrency,
                 totalAssets,
                 totalLiabilities,
-                last_updated_us,
-                ROW_NUMBER() OVER (
-                    PARTITION BY symbol
-                    ORDER BY fiscalYear DESC
-                ) as rn
-            FROM
-                balance_sheet
+                last_updated_us
+            FROM (
+                SELECT
+                    symbol,
+                    fiscalYear,
+                    period,
+                    date,
+                    reportedCurrency,
+                    totalAssets,
+                    totalLiabilities,
+                    last_updated_us,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY symbol
+                        ORDER BY fiscalYear DESC
+                    ) as rn
+                FROM
+                    balance_sheet
+                WHERE
+                    -- TODO: how to handle quarterly reports?
+                    period = 'FY'
+            )
             WHERE
-                -- TODO: how to handle quarterly reports?
-                period = 'FY'
+                rn = 1;
+            """
+        most_recent_fy_balance_sheet = polars.read_database(
+            query=balance_sheet_query, connection=db
         )
-        WHERE
-            rn = 1;
-        """
-    most_recent_fy_balance_sheet = polars.read_database(
-        query=balance_sheet_query, connection=db
-    )
-    income_query = """
-        SELECT
-            symbol,
-            fiscalYear,
-            period,
-            date,
-            reportedCurrency,
-            revenue,
-            netIncome,
-            last_updated_us
-        FROM (
+        income_query = """
             SELECT
                 symbol,
                 fiscalYear,
@@ -106,23 +104,34 @@ def _load_dfs() -> _Tables:
                 reportedCurrency,
                 revenue,
                 netIncome,
-                last_updated_us,
-                ROW_NUMBER() OVER (
-                    PARTITION BY symbol
-                    ORDER BY fiscalYear DESC
-                ) as rn
-            FROM
-                income
+                last_updated_us
+            FROM (
+                SELECT
+                    symbol,
+                    fiscalYear,
+                    period,
+                    date,
+                    reportedCurrency,
+                    revenue,
+                    netIncome,
+                    last_updated_us,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY symbol
+                        ORDER BY fiscalYear DESC
+                    ) as rn
+                FROM
+                    income
+                WHERE
+                    -- TODO: how to handle quarterly reports?
+                    period = 'FY'
+            )
             WHERE
-                -- TODO: how to handle quarterly reports?
-                period = 'FY'
+                rn = 1;
+            """
+        most_recent_fy_income = polars.read_database(
+            query=income_query, connection=db
         )
-        WHERE
-            rn = 1;
-        """
-    most_recent_fy_income = polars.read_database(
-        query=income_query, connection=db
-    )
+
     return _Tables(
         company_profile=company_profile,
         forex=forex,

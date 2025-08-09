@@ -78,7 +78,12 @@ label {
     padding: 0.56em 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     line-height: 1.1em;
 }
 
@@ -118,7 +123,11 @@ h6 {
     font-weight: bold;
 }
 
-section, article, .section, .article, .paper {
+section,
+article,
+.section,
+.article,
+.paper {
     line-height: 2em;
     word-wrap: break-word;
     word-break: normal;
@@ -131,7 +140,8 @@ hr {
     border-radius: 4px;
 }
 
-code, pre {
+code,
+pre {
     padding: 5px 10px;
     border-radius: 4px;
     overflow: auto;
@@ -225,6 +235,26 @@ input[type=reset] {
 button:hover,
 input[type=submit]:hover,
 input[type=reset]:hover {
-  transform: scale(1.05);
-  background: #04d43f;
+    transform: scale(1.05);
+    background: #04d43f;
+}
+
+@media (prefers-color-scheme: dark) {
+    html body {
+        background-color: #121212;
+        color: #ffffff;
+    }
+
+    blockquote {
+        color: #fafafa;
+        background-color: #000000;
+    }
+
+    .logo {
+        filter: invert(1);
+    }
+
+    div.dice {
+        border-color: #fff;
+    }
 }
