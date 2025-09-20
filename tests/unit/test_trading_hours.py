@@ -42,3 +42,87 @@ import stockdice.trading_hours
 def test_is_new_york_regular_trading_hours(fake_now, expected):
     with freezegun.freeze_time(fake_now):
         assert stockdice.trading_hours.is_new_york_regular_trading_hours() == expected
+
+
+@pytest.mark.parametrize(
+    ("fake_now", "expected"),
+    (
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 13, 12, 59, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            0.0,
+            id="tuesday-during-hours",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 13, 22, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            (
+                datetime.datetime(
+                    2025, 5, 14, 9, 30, tzinfo=stockdice.trading_hours.NEW_YORK
+                )
+                - datetime.datetime(
+                    2025, 5, 13, 22, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+                )
+            )
+            / datetime.timedelta(seconds=1),
+            id="tuesday-after-hours",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 13, 7, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            (2 * 60 + 28) * 60.0,
+            id="tuesday-before-hours",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 13, 9, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            28 * 60.0,
+            id="tuesday-before-same-hour",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 16, 12, 59, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            0.0,
+            id="friday-during-hours",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 16, 22, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            (
+                datetime.datetime(
+                    2025, 5, 19, 9, 30, tzinfo=stockdice.trading_hours.NEW_YORK
+                )
+                - datetime.datetime(
+                    2025, 5, 16, 22, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+                )
+            )
+            / datetime.timedelta(seconds=1),
+            id="friday-after-hours",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 16, 7, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            (2 * 60 + 28) * 60.0,
+            id="friday-before-hours",
+        ),
+        pytest.param(
+            datetime.datetime(
+                2025, 5, 16, 9, 2, tzinfo=stockdice.trading_hours.NEW_YORK
+            ),
+            28 * 60.0,
+            id="friday-before-same-hour",
+        ),
+    ),
+)
+def test_seconds_to_next_new_york_trading_hours(fake_now, expected):
+    with freezegun.freeze_time(fake_now):
+        assert (
+            stockdice.trading_hours.seconds_to_next_new_york_trading_hours() == expected
+        )

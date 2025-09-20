@@ -133,6 +133,9 @@ async def main():
                 await download_market_data(client=client)
             else:
                 await download_all(client=client)
+                await asyncio.sleep(
+                    stockdice.trading_hours.seconds_to_next_new_york_trading_hours()
+                )
 
 
 if __name__ == "__main__":

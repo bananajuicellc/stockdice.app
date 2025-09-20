@@ -34,7 +34,9 @@ class _Tables:
 def _load_dfs() -> _Tables:
     # TODO: we might be able to use read_database_uri if we're more careful
     # about what types we store in each column.
-    with sqlite3.connect(stockdice.config.config.replica_db_path, autocommit=False) as db:
+    with sqlite3.connect(
+        stockdice.config.config.replica_db_path, autocommit=False
+    ) as db:
         try:
             # End the transaction that was started automatically.
             db.execute("ROLLBACK;")
@@ -45,7 +47,7 @@ def _load_dfs() -> _Tables:
         # https://stackoverflow.com/a/39265148/101923
         db.execute("PRAGMA journal_mode=WAL")
         db.execute("BEGIN TRANSACTION;")
-            
+
         company_profile_query = """
             SELECT *
             FROM company_profile
@@ -128,9 +130,7 @@ def _load_dfs() -> _Tables:
             WHERE
                 rn = 1;
             """
-        most_recent_fy_income = polars.read_database(
-            query=income_query, connection=db
-        )
+        most_recent_fy_income = polars.read_database(query=income_query, connection=db)
 
     return _Tables(
         company_profile=company_profile,
@@ -153,9 +153,7 @@ def roll(*, n: int = 1, weights=None) -> polars.DataFrame:
             polars.col("companyName"),
             marketCapUSD=polars.col("marketCap") * polars.col("price_forex"),
         )
-        .filter(
-            polars.col("marketCapUSD") > 0
-        )
+        .filter(polars.col("marketCapUSD") > 0)
         .with_row_index("idx")
     )
 
