@@ -93,11 +93,11 @@ async def download_company_profile(
 
     # Avoid OverflowError for potentially large values. See:
     # https://github.com/bananajuicellc/overcastdata.com/issues/148
-    for key in _FLOAT_KEYS:
-        if key in resp_json:
-            value = resp_json
+    for profile in resp_json:
+        for key in _FLOAT_KEYS:
+            value = profile.get(key, None)
             if value:
-                resp_json[key] = float(value)
+                profile[key] = float(value)
 
     db.executemany(
         f"""
