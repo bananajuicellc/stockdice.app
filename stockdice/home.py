@@ -41,9 +41,9 @@ def roll_uniform():
     result = dice.roll()
     return render.render_template(
         "roll.html.j2",
-        symbol=result['symbol'].item(),
-        company_name=result['companyName'].item(),
-        market_cap_usd=int(result['marketCapUSD'].item()),
+        symbol=result["symbol"].item(),
+        company_name=result["companyName"].item(),
+        market_cap_usd=int(result["marketCapUSD"].item()),
     )
 
 
@@ -52,7 +52,7 @@ def roll_market_cap():
     result = dice.roll(weights=True)
     return render.render_template(
         "roll.html.j2",
-        symbol=result['symbol'].item(),
-        company_name=result['companyName'].item(),
-        market_cap_usd=int(result['marketCapUSD'].item()),
+        symbol=result["symbol"].item(),
+        company_name=result["companyName"].item(),
+        market_cap_usd=int(result["marketCapUSD"].item()),
     )

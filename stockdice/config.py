@@ -67,7 +67,7 @@ class Config:
                 name=name,
             )
             config[key] = response.payload.data.decode("utf-8")
-        
+
         return cls(config)
 
     @property
@@ -91,7 +91,6 @@ class Config:
         # Load from file if present or load from gcs
         if DB_REPLICA_PATH.exists():
             return DB_REPLICA_PATH
-        
 
         # TODO(tswast): Maybe some kind of lock to avoid downloading the
         # database more than once in multi-threaded environments?
@@ -106,12 +105,14 @@ class Config:
 
                 if self._storage_client is None:
                     self._storage_client = google.cloud.storage.Client()
-                
-                self._replica_db_path = load_replica_from_gcs(self._storage_client, bucket_name=self.bucket)
-                
+
+                self._replica_db_path = load_replica_from_gcs(
+                    self._storage_client, bucket_name=self.bucket
+                )
+
                 if previous_path is not None:
                     pathlib.Path(previous_path).unlink(missing_ok=True)
-        
+
         return self._replica_db_path
 
     @property
@@ -133,10 +134,14 @@ class Config:
         return self._db
 
 
-def load_replica_from_gcs(storage_client: google.cloud.storage.Client, bucket_name: str):
+def load_replica_from_gcs(
+    storage_client: google.cloud.storage.Client, bucket_name: str
+):
     uri = f"gs://{bucket_name}/"
     with tempfile.NamedTemporaryFile(delete=False, delete_on_close=False) as fp:
-        storage_client.bucket(bucket_name=bucket_name).blob("stockdice_backup.sqlite").download_to_file(fp)
+        storage_client.bucket(bucket_name=bucket_name).blob(
+            "stockdice_backup.sqlite"
+        ).download_to_file(fp)
     db_replica_path = fp.name
     return db_replica_path
 
