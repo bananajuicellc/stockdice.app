@@ -53,6 +53,7 @@ root.addHandler(handler)
 # It can take about 1 hour to refresh, so include a max age about that long so
 # we can save time if the task has to restart.
 MAX_AGE = datetime.timedelta(minutes=60)
+MAX_AGE_OUTSIDE_TRADING_HOURS = datetime.timedelta(days=1)
 
 
 def backup_db():
@@ -103,11 +104,16 @@ def backup_db_loop():
 async def download_all(*, client: httpx.AsyncClient):
     await stockdice.stocklist.download_symbol_list(client=client)
 
+    if stockdice.trading_hours.is_new_york_regular_trading_hours():
+        max_age = MAX_AGE
+    else:
+        max_age = MAX_AGE_OUTSIDE_TRADING_HOURS
+
     await asyncio.gather(
-        stockdice.forex.download_forex(max_age=MAX_AGE, client=client),
-        stockdice.company_profile.download_all(max_age=MAX_AGE, client=client),
-        stockdice.income.download_all(max_age=MAX_AGE, client=client),
-        stockdice.balance_sheet.download_all(max_age=MAX_AGE, client=client),
+        stockdice.forex.download_forex(max_age=max_age, client=client),
+        stockdice.company_profile.download_all(max_age=max_age, client=client),
+        stockdice.income.download_all(max_age=max_age, client=client),
+        stockdice.balance_sheet.download_all(max_age=max_age, client=client),
     )
 
 
@@ -115,9 +121,14 @@ async def download_market_data(*, client: httpx.AsyncClient):
     """During market hours, just download data that changes more frequently."""
     await stockdice.stocklist.download_symbol_list(client=client)
 
+    if stockdice.trading_hours.is_new_york_regular_trading_hours():
+        max_age = MAX_AGE
+    else:
+        max_age = MAX_AGE_OUTSIDE_TRADING_HOURS
+
     await asyncio.gather(
-        stockdice.forex.download_forex(max_age=MAX_AGE, client=client),
-        stockdice.company_profile.download_all(max_age=MAX_AGE, client=client),
+        stockdice.forex.download_forex(max_age=max_age, client=client),
+        stockdice.company_profile.download_all(max_age=max_age, client=client),
     )
 
 

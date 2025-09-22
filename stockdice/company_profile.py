@@ -16,6 +16,11 @@ FMP_COMPANY_PROFILE = (
 )
 
 
+_FLOAT_KEYS = {
+    "changePercentage",
+}
+
+
 def is_fund_or_etf(symbol: str):
     db = stockdice.config.config.db
     row = db.execute(
@@ -85,6 +90,14 @@ async def download_company_profile(
         )
         db.commit()
         return
+
+    # Avoid OverflowError for potentially large values. See:
+    # https://github.com/bananajuicellc/overcastdata.com/issues/148
+    for profile in resp_json:
+        for key in _FLOAT_KEYS:
+            value = profile.get(key, None)
+            if value:
+                profile[key] = float(value)
 
     db.executemany(
         f"""
