@@ -31,6 +31,8 @@ def create_all_tables(db, *, reset: bool):
     create_forex(db, reset=reset)
     create_income(db, reset=reset)
     create_symbols(db, reset=reset)
+    create_user(db, reset=reset)
+    create_roll_history(db, reset=reset)
 
 
 def create_balance_sheet(db, *, reset: bool):
@@ -269,6 +271,55 @@ def create_company_profile(db, *, reset: bool):
         );
         """
     )
+
+
+def create_user(db, *, reset: bool):
+    if reset:
+        db.execute("DROP TABLE IF EXISTS user;")
+    elif _table_exists(db, "user"):
+        logging.warning("user already exists, skipping")
+        return
+
+    db.execute(
+        """
+        CREATE TABLE user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            roll_amount_dollars INTEGER,
+            created_at INTEGER NOT NULL
+        );
+        """
+    )
+    db.commit()
+
+
+def create_roll_history(db, *, reset: bool):
+    if reset:
+        db.execute("DROP TABLE IF EXISTS roll_history;")
+    elif _table_exists(db, "roll_history"):
+        logging.warning("roll_history already exists, skipping")
+        return
+
+    db.execute(
+        """
+        CREATE TABLE roll_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            symbol TEXT NOT NULL,
+            company_name TEXT NOT NULL,
+            price REAL,
+            market_cap_usd INTEGER,
+            roll_amount_dollars INTEGER NOT NULL,
+            share_count REAL,
+            roll_type TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES user(id)
+        );
+        """
+    )
+    db.commit()
 
 
 def is_fresh(*, table: str, symbol: str, max_last_updated_us: int) -> bool:
