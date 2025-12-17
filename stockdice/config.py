@@ -36,7 +36,7 @@ DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
 
 class Config:
     def __init__(self, config: dict):
-        self._db = None
+        self._db = threading.local()
         self._replica_db_path = None
         self._replica_db_refresh_time = time.monotonic()
         self._replica_db_lock = threading.Lock()
@@ -117,21 +117,22 @@ class Config:
 
     @property
     def db(self):
-        if self._db is None:
-            self._db = sqlite3.connect(DB_PATH, autocommit=False)
+        # Use thread-local storage to ensure each thread gets its own connection
+        if not hasattr(self._db, 'connection') or self._db.connection is None:
+            self._db.connection = sqlite3.connect(DB_PATH, autocommit=False)
 
             try:
                 # End the transaction that was started automatically.
-                self._db.execute("ROLLBACK;")
+                self._db.connection.execute("ROLLBACK;")
             except sqlite3.OperationalError:
                 # Transaction might not have been started.
                 pass
 
             # Enable Write-Ahead Logging for greater concurrency.
             # https://stackoverflow.com/a/39265148/101923
-            self._db.execute("PRAGMA journal_mode=WAL")
-            self._db.execute("BEGIN TRANSACTION;")
-        return self._db
+            self._db.connection.execute("PRAGMA journal_mode=WAL")
+            self._db.connection.execute("BEGIN TRANSACTION;")
+        return self._db.connection
 
 
 def load_replica_from_gcs(
