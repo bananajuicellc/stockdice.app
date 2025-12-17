@@ -60,13 +60,33 @@ video {
 
 fieldset {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto 1fr;
+  gap: 0.5em;
+  align-items: center;
 }
 
 fieldset label {
   justify-self: end;
   align-self: center;
   margin-right: 2pt;
+  white-space: nowrap;
+}
+
+fieldset > div:empty {
+  grid-column: 1 / -1;
+}
+
+/* Buttons that come after empty div (spanning both columns) */
+fieldset > div:empty ~ button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+/* Links next to buttons */
+fieldset a,
+form a {
+  margin-left: 1em;
+  align-self: center;
 }
 
 div.dice {
@@ -92,4 +112,189 @@ div.dice-navigation {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+}
+
+fieldset input[type="text"],
+fieldset input[type="password"],
+fieldset input[type="email"],
+fieldset input[type="number"] {
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+fieldset button {
+  padding: 0.75em 1.5em;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: fit-content;
+  width: auto;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+fieldset button:hover {
+  background-color: #0056b3;
+}
+/* Roll confirmation button styling - matches fieldset buttons */
+form:not(fieldset) button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+form:not(fieldset) button:hover {
+  background-color: #0056b3;
+}
+
+/* Buttons outside of fieldsets */
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Buttons and links together in forms */
+form button + a,
+form a + button {
+  margin-left: 1em;
+}
+
+/* Form actions container for better alignment */
+form > p + ul + button,
+form > ul + button {
+  margin-top: 1em;
+  display: inline-block;
+}
+
+fieldset small {
+  grid-column: 2;
+  font-size: 0.875em;
+  color: #666;
+}
+
+ul.messages {
+  list-style: none;
+  padding: 0;
+  margin: 1em 0;
+}
+
+ul.messages li {
+  padding: 0.5em;
+  margin: 0.5em 0;
+  border-radius: 3px;
+}
+
+ul.messages li.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+ul.messages li.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Default styling for messages without category (backward compatibility) */
+ul.messages li:not(.success):not(.error) {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+footer {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid #ccc;
+}
+
+footer a, footer span {
+  margin-right: 1em;
+}
+
+/* Roll history table styling - dynamically fits content */
+.roll-history-container {
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+table th,
+table td {
+  padding: 0.5em;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  color: #212529;
+}
+
+table th {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+table td {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 200px;
+}
+
+table tbody tr {
+  background-color: white;
+}
+
+table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+@media (max-width: 768px) {
+  table {
+    font-size: 0.875em;
+  }
+  
+  table th,
+  table td {
+    padding: 0.25em;
+  }
 }
