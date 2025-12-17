@@ -23,6 +23,15 @@
 
 <footer>
     <a href="{{ url_for('home.index') }}">Home</a>
+    {% if session.username %}
+        <span>Logged in as <strong>{{ session.username }}</strong></span>
+        <a href="{{ url_for('home.preferences') }}">Preferences</a>
+        <a href="{{ url_for('home.roll_history') }}">Roll History</a>
+        <a href="{{ url_for('auth.logout') }}">Log Out</a>
+    {% else %}
+        <a href="{{ url_for('auth.login') }}">Log In</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+    {% endif %}
 
     <p><small>&copy; <a href="https://bananajuice.tech/">Banana Juice LLC</a>, Chicago, Illinois, USA</small></p>
 </footer>
