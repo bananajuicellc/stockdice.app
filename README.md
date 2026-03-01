@@ -23,11 +23,19 @@ Get an API key for [Financial Modeling Prep](https://site.financialmodelingprep.
 Setup a Python development environment by installing `uv`. See:
 https://docs.astral.sh/uv/getting-started/installation/ for instructions.
 
-Initialize the local database.
+Initialize the local databases.
 
 ```
+# Initialize financial data database (stock prices, company profiles, etc.)
 uv run cli/initialize_db.py
+
+# Initialize users database (user accounts, roll history, preferences)
+uv run cli/initialize_users_db.py
 ```
+
+**Note**: The financial data database and users database are separate. The financial data database gets refreshed periodically with new market data, while the users database is persistent and never reset automatically.
+
+Users database location: `third_party/users/users.sqlite`
 
 ## Usage
 

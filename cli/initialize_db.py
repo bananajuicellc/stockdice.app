@@ -28,5 +28,5 @@ if __name__ == "__main__":
         default=False,
     )
     args = parser.parse_args()
-
+    #Creates only financial tables (balance_sheet, company_profile, forex, income, symbol)
     stockdice.db.create_all_tables(stockdice.config.config.db, reset=args.reset)
