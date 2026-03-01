@@ -48,7 +48,7 @@ def preferences():
         flask.flash("Please log in to view your preferences.", "error")
         return flask.redirect(flask.url_for("auth.login"))
     
-    db = stockdice.config.config.db
+    db = stockdice.config.config.users_db
     
     if flask.request.method == "POST":
         roll_amount_dollars_str = flask.request.form.get("roll_amount_dollars", "").strip()
@@ -372,7 +372,7 @@ def confirm_roll():
         flask.flash("No pending roll to confirm.", "error")
         return flask.redirect(flask.url_for("home.english_us"))
     
-    db = stockdice.config.config.db
+    db = stockdice.config.config.users_db
     created_at = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
     
     # Store roll in history
@@ -414,7 +414,7 @@ def confirm_roll():
     flask.session.pop("pending_roll", None)
     
     flask.flash(f"Roll confirmed! You've invested ${pending_roll['roll_amount_dollars']:,} in {pending_roll['symbol']}.", "success")
-    return flask.redirect(flask.url_for("roll_history"))
+    return flask.redirect(flask.url_for("home.roll_history"))
 
 
 @bp.route("/en/roll-history/")
@@ -425,7 +425,7 @@ def roll_history():
         flask.flash("Please log in to view your roll history.", "error")
         return flask.redirect(flask.url_for("auth.login"))
     
-    db = stockdice.config.config.db
+    db = stockdice.config.config.users_db
     
     # Get roll history for the user, ordered by most recent first
     rolls = db.execute(

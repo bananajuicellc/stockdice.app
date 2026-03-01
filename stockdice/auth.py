@@ -42,7 +42,7 @@ def get_user_roll_amount_dollars():
     if user_id is None:
         return None
     
-    db = stockdice.config.config.db
+    db = stockdice.config.config.users_db
     result = db.execute(
         "SELECT roll_amount_dollars FROM user WHERE id = :user_id",
         {"user_id": user_id},
@@ -87,7 +87,7 @@ def register():
                 error = "Roll amount must be a valid number."
 
         if error is None:
-            db = stockdice.config.config.db
+            db = stockdice.config.config.users_db
             # Check if username already exists
             existing_user = db.execute(
                 "SELECT id FROM user WHERE username = :username",
@@ -108,7 +108,7 @@ def register():
                 else:
                     # Create new user
                     password_hash = generate_password_hash(password)
-                    created_at = int(time.time()) # TODO: use datetime.now() instead
+                    created_at = int(time.time()) # TODO(arwas11): use datetime.now() instead
                     db.execute(
                         "INSERT INTO user (username, email, password_hash, roll_amount_dollars, created_at) VALUES (:username, :email, :password_hash, :roll_amount_dollars, :created_at)",
                         {
@@ -143,7 +143,7 @@ def login():
             error = "Password is required."
 
         if error is None:
-            db = stockdice.config.config.db
+            db = stockdice.config.config.users_db
             user = db.execute(
                 "SELECT id, username, password_hash FROM user WHERE username = :username",
                 {"username": username},
