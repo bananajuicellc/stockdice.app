@@ -32,13 +32,23 @@ CONFIG_PATH = REPO_ROOT / "environment.toml"
 FMP_DIR = REPO_ROOT / "third_party" / "financialmodelingprep.com"
 DB_PATH = FMP_DIR / "stockdice.sqlite"
 DB_REPLICA_PATH = FMP_DIR / "stockdice_backup.sqlite"
+# Separate database for user data (never reset, persistent)
+USERS_DIR = REPO_ROOT / "third_party" / "users"
+USERS_DB_PATH = USERS_DIR / "users.sqlite"
+USERS_DB_REPLICA_PATH = USERS_DIR / "users_backup.sqlite"
+
 
 
 class Config:
     def __init__(self, config: dict):
+        # Use thread-local storage so each thread has its own connection.
+        # SQLite connections are not safe to share across threads.
         self._db = threading.local()
+        self._users_db = threading.local()
         self._replica_db_path = None
+        self._users_db_replica_path = None
         self._replica_db_refresh_time = time.monotonic()
+        self._users_db_refresh_time = time.monotonic()
         self._replica_db_lock = threading.Lock()
         self._storage_client = None
         self._config = config
@@ -117,22 +127,45 @@ class Config:
 
     @property
     def db(self):
-        # Use thread-local storage to ensure each thread gets its own connection
-        if not hasattr(self._db, 'connection') or self._db.connection is None:
-            self._db.connection = sqlite3.connect(DB_PATH, autocommit=False)
+        conn = getattr(self._db, "connection", None)
+        if conn is None:
+            conn = sqlite3.connect(DB_PATH, autocommit=False)
+            self._db.connection = conn
 
             try:
                 # End the transaction that was started automatically.
-                self._db.connection.execute("ROLLBACK;")
+                conn.execute("ROLLBACK;")
             except sqlite3.OperationalError:
                 # Transaction might not have been started.
                 pass
 
             # Enable Write-Ahead Logging for greater concurrency.
             # https://stackoverflow.com/a/39265148/101923
-            self._db.connection.execute("PRAGMA journal_mode=WAL")
-            self._db.connection.execute("BEGIN TRANSACTION;")
-        return self._db.connection
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("BEGIN TRANSACTION;")
+        return conn
+
+    @property
+    def users_db(self):
+        """Separate database for user data (persistent, never reset)."""
+        USERS_DIR.mkdir(parents=True, exist_ok=True)
+
+        conn = getattr(self._users_db, "connection", None)
+        if conn is None:
+            conn = sqlite3.connect(USERS_DB_PATH, autocommit=False)
+            self._users_db.connection = conn
+
+            try:
+                # End the transaction that was started automatically.
+                conn.execute("ROLLBACK;")
+            except sqlite3.OperationalError:
+                # Transaction might not have been started.
+                pass
+
+            # Enable Write-Ahead Logging for greater concurrency.
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("BEGIN TRANSACTION;")
+        return conn
 
 
 def load_replica_from_gcs(

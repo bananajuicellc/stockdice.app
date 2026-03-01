@@ -26,12 +26,17 @@ def _table_exists(db, table_name):
 
 
 def create_all_tables(db, *, reset: bool):
+    """Create all financial data tables. User tables are in separate database."""
     create_balance_sheet(db, reset=reset)
     create_company_profile(db, reset=reset)
     create_forex(db, reset=reset)
     create_income(db, reset=reset)
     create_symbols(db, reset=reset)
-    create_user(db, reset=reset)
+
+
+def create_all_user_tables(db, *, reset: bool):
+    """Create all user-related tables in the users database."""
+    create_users(db, reset=reset)
     create_roll_history(db, reset=reset)
 
 
@@ -273,7 +278,7 @@ def create_company_profile(db, *, reset: bool):
     )
 
 
-def create_user(db, *, reset: bool):
+def create_users(db, *, reset: bool):
     if reset:
         db.execute("DROP TABLE IF EXISTS user;")
     elif _table_exists(db, "user"):
