@@ -1,0 +1,28 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}Preferences{% endblock %}
+
+{% block content %}
+<h2>Preferences</h2>
+
+<form method="post">
+  <fieldset>
+    <label for="roll_amount_dollars">Roll Amount (USD):</label>
+    <input 
+      type="number" 
+      id="roll_amount_dollars" 
+      name="roll_amount_dollars" 
+      min="1" 
+      step="1" 
+      value="{{ roll_amount_dollars if roll_amount_dollars else '' }}"
+      placeholder="e.g., 1000"
+    >
+    <small>This is the dollar amount you plan to invest per stock roll.</small>
+    
+    <div></div>
+    <button type="submit">Save Preferences</button>
+  </fieldset>
+</form>
+{% endblock %}
+
+

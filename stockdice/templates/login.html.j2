@@ -1,0 +1,27 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}Log In{% endblock %}
+
+{% block content %}
+<h2>Log In</h2>
+
+<form method="post">
+  <fieldset>
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required autofocus>
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    
+    <div></div>
+    <button type="submit">Log In</button>
+  </fieldset>
+</form>
+
+<p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a></p>
+{% endblock %}
+
+
+
+
+

@@ -1,5 +1,6 @@
 environment.toml
 third_party/financialmodelingprep.com
+third_party/users
 .vscode
 .ruff_cache/
 

@@ -8,6 +8,7 @@ third_party/
 # Below is the contents of .gitignore.
 environment.toml
 third_party/financialmodelingprep.com
+third_party/users
 .vscode
 .ruff_cache/
 

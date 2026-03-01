@@ -8,4 +8,43 @@
 </div>
 
 <p>{{company_name}} (${{"{:,}".format(market_cap_usd)}} market cap)</p>
+
+{% if price %}
+<p><strong>Stock Price:</strong> ${{"{:.2f}".format(price)}}</p>
+{% if last_updated_str %}
+<p><small>Stock price data last refreshed: {{last_updated_str}}</small></p>
+{% endif %}
+<p><small><strong>⚠️ Disclaimer:</strong> This price is not real-time and may not reflect current market prices. Always verify current prices before making investment decisions.</small></p>
+{% endif %}
+
+{% if roll_amount_dollars and roll_amount_dollars > 0 %}
+<p><strong>Investment Amount:</strong> ${{"{:,}".format(roll_amount_dollars)}}</p>
+{% if share_count and price %}
+<p><strong>Estimated Shares:</strong> {{"{:.4f}".format(share_count)}} shares</p>
+<p><small>Based on your saved roll amount preference of ${{"{:,}".format(roll_amount_dollars)}} and the stock price of ${{"{:.2f}".format(price)}}.</small></p>
+{% endif %}
+{% elif user_id %}
+<p><a href="{{ url_for('home.preferences') }}">Set your roll amount preference</a> to see investment amounts and roll with a custom amount.</p>
+{% else %}
+<p><a href="{{ url_for('auth.login') }}">Log in</a> to set your roll amount preference and see how much to invest per stock.</p>
+{% endif %}
+
+{% if show_custom_amount_option and not pending_confirmation %}
+<hr>
+<p><a href="{{ url_for('home.roll_uniform_select_amount' if roll_type == 'uniform' else 'home.roll_market_cap_select_amount') }}">Roll with a custom amount</a> (will deduct from your saved preference)</p>
+{% endif %}
+
+{% if pending_confirmation %}
+<hr>
+<form method="post" action="{{ url_for('home.confirm_roll') }}">
+  <p><strong>Confirm this roll?</strong></p>
+  <p>This will:</p>
+  <ul>
+    <li>Store this roll in your history</li>
+    <li>Deduct ${{"{:,}".format(roll_amount_dollars)}} from your saved roll amount preference</li>
+  </ul>
+  <button type="submit">Confirm Roll</button>
+  <a href="{{ url_for('home.english_us') }}">Cancel</a>
+</form>
+{% endif %}
 {% endblock %}

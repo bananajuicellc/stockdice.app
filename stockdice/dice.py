@@ -151,6 +151,8 @@ def roll(*, n: int = 1, weights=None) -> polars.DataFrame:
         .select(
             polars.col("symbol"),
             polars.col("companyName"),
+            polars.col("price"),
+            polars.col("last_updated_us"),
             marketCapUSD=polars.col("marketCap") * polars.col("price_forex"),
         )
         .filter(polars.col("marketCapUSD") > 0)
@@ -174,5 +176,9 @@ def roll(*, n: int = 1, weights=None) -> polars.DataFrame:
         samples = company_profile_usd.join(sample_idxs, on="idx")
 
     return samples.select(
-        polars.col("symbol"), polars.col("companyName"), polars.col("marketCapUSD")
+        polars.col("symbol"),
+        polars.col("companyName"),
+        polars.col("marketCapUSD"),
+        polars.col("price"),
+        polars.col("last_updated_us"),
     )

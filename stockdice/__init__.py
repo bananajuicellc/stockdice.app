@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import os
+import secrets
 
 import flask
 
+import stockdice.config
+from stockdice import auth
 from stockdice import home
 
 
@@ -28,6 +31,15 @@ def create_app(test_config=None):
     if test_config is None:
         # load the instance config, if it exists, when not testing
         app.config.from_pyfile("config.py", silent=True)
+        # Set SECRET_KEY from config system if available, otherwise generate one
+        # (Note: generated keys won't persist across restarts, but that's OK for dev)
+        if not app.config.get("SECRET_KEY"):
+            secret_key = getattr(stockdice.config.config, "secret_key", None)
+            if secret_key:
+                app.config["SECRET_KEY"] = secret_key
+            else:
+                # Generate a random key for development (not recommended for production)
+                app.config["SECRET_KEY"] = secrets.token_hex(32)
     else:
         # load the test config if passed in
         app.config.from_mapping(test_config)
@@ -39,5 +51,6 @@ def create_app(test_config=None):
         pass
 
     app.register_blueprint(home.bp)
+    app.register_blueprint(auth.bp)
 
     return app

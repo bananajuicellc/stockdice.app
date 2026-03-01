@@ -1,0 +1,32 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}Select Roll Amount{% endblock %}
+
+{% block content %}
+<h2>Select Roll Amount</h2>
+
+<p>Your saved roll amount preference: <strong>${{"{:,}".format(saved_roll_amount)}}</strong></p>
+<p>Choose how much you want to use for this roll (up to your saved preference):</p>
+
+<form method="post">
+  <fieldset>
+    <label for="roll_amount">Roll Amount (USD):</label>
+    <input 
+      type="number" 
+      id="roll_amount" 
+      name="roll_amount" 
+      min="1" 
+      max="{{ saved_roll_amount }}"
+      step="1" 
+      value="{{ saved_roll_amount }}"
+      required
+    >
+    <small>Maximum: ${{"{:,}".format(saved_roll_amount)}}</small>
+    
+    <div></div>
+    <button type="submit">Roll Dice</button>
+    <a href="{{ url_for('home.english_us') }}">Cancel</a>
+  </fieldset>
+</form>
+{% endblock %}
+

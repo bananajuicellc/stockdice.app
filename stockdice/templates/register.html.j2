@@ -1,0 +1,36 @@
+{% extends 'base.html.j2' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<h2>Register</h2>
+
+<form method="post">
+  <fieldset>
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required autofocus>
+    
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required minlength="8">
+    
+    <label for="password_confirm">Confirm Password:</label>
+    <input type="password" id="password_confirm" name="password_confirm" required minlength="8">
+    
+    <label for="roll_amount_dollars">Roll Amount (USD):</label>
+    <input type="number" id="roll_amount_dollars" name="roll_amount_dollars" min="1" step="1" placeholder="e.g., 1000">
+    <small>This is the dollar amount you plan to invest per stock roll. You can change this later in your preferences.</small>
+    
+    <div></div>
+    <button type="submit">Register</button>
+  </fieldset>
+</form>
+
+<p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+{% endblock %}
+
+
+
+
