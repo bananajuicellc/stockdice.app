@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: html(title='Results', content=~{::content})}">
+<head>
+    <title>Results</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div th:if="${error != null}">
+            <p class="error" th:text="${error}"></p>
+        </div>
+        <div th:if="${error == null}">
+            <div class="dice" th:text="${symbol}">
+            </div>
+
+            <p><span th:text="${company_name}"></span> ($<span th:text="${#numbers.formatInteger(market_cap_usd, 1, 'COMMA')}"></span> market cap)</p>
+        </div>
+    </div>
+</body>
+</html>
