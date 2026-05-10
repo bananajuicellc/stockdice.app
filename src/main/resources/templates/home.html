@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: html(title='Roll', content=~{::content})}">
+<head>
+    <title>Roll</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <div class="dice-navigation">
+            <a th:href="@{/en/roll-uniform/}" class="dice-link"><div class="dice">Uniform</div></a>
+            <a th:href="@{/en/roll-market-cap/}" class="dice-link"><div class="dice">Market Cap</div></a>
+            <a th:href="@{/en/customize/}" class="dice-link"><div class="dice">Custom weights (coming soon)</div></a>
+        </div>
+    </div>
+</body>
+</html>

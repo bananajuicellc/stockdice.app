@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link th:if="${canonical_url != null}" rel="canonical" th:href="${canonical_url}"/>
+
+    <link rel="stylesheet" type="text/css" th:href="@{/style.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/flat-remix.min.css}" />
+
+    <title th:text="${title != null ? title + ' - StockDice.app' : 'StockDice.app'}">StockDice.app</title>
+</head>
+<body>
+    <h1>
+        <a th:href="@{/}" class="logo-link">StockDice.app</a>
+        <span th:if="${title != null}" th:text="'- ' + ${title}"></span>
+    </h1>
+
+    <div class="content" th:insert="~{::content}">
+    </div>
+
+    <footer>
+        <a th:href="@{/}">Home</a>
+
+        <p><small>&copy; <a href="https://bananajuice.tech/">Banana Juice LLC</a>, Chicago, Illinois, USA</small></p>
+    </footer>
+</body>
+</html>
