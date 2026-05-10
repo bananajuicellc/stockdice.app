@@ -12,8 +12,8 @@ public class FmpClient {
 
     private final RestTemplate restTemplate;
     private final FmpConfig fmpConfig;
-    private static final long SECONDS_BETWEEN_REQUESTS_MS = 200; // 5 req/sec (300/min)
-    private long nextRequestTimeMs = System.currentTimeMillis();
+    private static final long NANOS_BETWEEN_REQUESTS = 200_000_000L; // 200 ms in nanoseconds
+    private long nextRequestTimeNanos = System.nanoTime();
 
     public FmpClient(RestTemplate restTemplate, FmpConfig fmpConfig) {
         this.restTemplate = restTemplate;
@@ -21,16 +21,18 @@ public class FmpClient {
     }
 
     public synchronized <T> ResponseEntity<T> get(String url, ParameterizedTypeReference<T> responseType, Object... uriVariables) {
-        long currentTimeMs = System.currentTimeMillis();
-        if (currentTimeMs < nextRequestTimeMs) {
+        long currentNanos = System.nanoTime();
+        if (currentNanos - nextRequestTimeNanos < 0) { // Check if current time is before the deadline
             try {
-                Thread.sleep(nextRequestTimeMs - currentTimeMs);
+                long sleepMs = (nextRequestTimeNanos - currentNanos) / 1_000_000L;
+                int sleepNanos = (int) ((nextRequestTimeNanos - currentNanos) % 1_000_000L);
+                Thread.sleep(sleepMs, sleepNanos);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Interrupted while rate limiting", e);
             }
         }
-        nextRequestTimeMs = System.currentTimeMillis() + SECONDS_BETWEEN_REQUESTS_MS;
+        nextRequestTimeNanos = System.nanoTime() + NANOS_BETWEEN_REQUESTS;
 
         return restTemplate.exchange(url, HttpMethod.GET, null, responseType, uriVariables);
     }
